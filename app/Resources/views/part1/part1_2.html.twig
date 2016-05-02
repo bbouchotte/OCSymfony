@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap1.2
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/vous-avez-dit-symfony">
+			Chap 1.2 - Vous avez dit Symfony?
+		</a>
+	</h3>
+	
+	<h4>L'architecture des fichiers:</h4>
+	<ul>
+		<li>
+			/app : (application) tout ce qui concerne le site sauf le code source.
+		</li>
+		<li>
+			/bin : tous les executables (les commandes PHP).
+		</li>
+		<li>
+			/src : code source organisé en bundles.
+		</li>
+		<li>
+			/tests : pas vu dans ce cours mais important.... à voir. 
+		</li>
+		<li>
+			/var : tout ce que Symfony va écrire durant son process : les logs, le cache, et d'autres fichiers nécessaires à son bon fonctionnement. Nous n'écrirons jamais dedans nous même.
+		</li>
+		<li>
+			/vendor : bibliothèques externes.
+		</li>
+		<li>
+			/web : fichiers destinés aux visiteurs: images, CSS, JavaScript. Controleur frontal app.php. Seul répertoire qui devrait être accessible à vos visiteurs. 
+			Vous pouvez configurer votre Apache pour que l'URL http://localhost/Symfony pointe directement sur le répertoire /web : 
+			<a href="http://www.commentcamarche.net/faq/10240-configurer-apache-et-windows-pour-creer-un-hote-virtuel">
+			tuto
+			</a>.
+		</li>
+	</ul>
+	
+	<h4>Le contrôleur frontal - front controller</h4>
+	<p>Point d'entrée de l'application. app.php (pour les visiteurs) ou app_dev.php(pour développer).</p>
+	<p>En mode production, les erreurs sont stockées dans var/logs/prod.log</p>
+	<p>Appelle le noyau (kernel) et lui demande de transformer une requête en réponse</p>
+	
+	<h4>Les bundles</h4>
+	<p>Un bundle regroupe tout ce qui concerne une même fonctionnalité (ex: BlogBundle).</p>
+	<p>
+		Presque tous les bundles de la communauté Symfony sont regroupés sur un même site : 
+		<a href="http://knpbundles.com/" >
+			http://knpbundles.com
+		</a>. Exemples:
+	</p>
+	<ul>
+		<li>
+			<a href="http://knpbundles.com/FriendsOfSymfony/FOSUserBundle">
+				FOSUserBundle
+			</a>			
+		</li>
+		<li>
+			<a href="http://knpbundles.com/FriendsOfSymfony/FOSCommentBundle">
+				FOSCommentBundle
+			</a>			
+		</li>
+		<li>
+			<a href="http://knpbundles.com/ornicar/GravatarBundle">
+				GravatarBundle
+			</a>			
+		</li>
+	</ul>
+	
+		
+	<h3>En résumé</h3>
+	<ul>
+		<li>Symfony est organisé en six répertoires : app, bin , src, var , vendor et web.</li>
+		<li>Le répertoire dans lequel on passera le plus de temps est src, il contient le code source de notre site.</li>
+		<li>Il existe deux environnements de travail :</li>
+		<li>L'environnement « prod » est destiné à vos visiteurs : il est rapide à exécuter, et ne divulgue pas les messages d'erreur.</li>
+		<li>L'environnement « dev » est destiné au développeur, c'est-à-dire vous : il est plus lent, mais offre plein d'informations utiles au développement.</li>
+		<li>Symfony utilise l'architecture MVC pour bien organiser les différentes parties du code source.</li>
+		<li>Un bundle est une brique de votre application : il contient tout ce qui concerne une fonctionnalité donnée. Cela permet de bien organiser les différentes parties de votre site.</li>
+		<li>Il existe des milliers de bundles développés par la communauté, pensez à vérifier qu'il n'existe pas déjà un bundle qui fait ce que vous souhaitez faire !</li>
+	</ul>
+	
+		
+{% endblock %}	
