@@ -1,20 +1,29 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}Symfony{% endblock %}
 
 {% block body %}
+
 	{{ parent() }}
 
-
-
 {% endblock %}
-		{% block body_content %}
-		<h1>Symfony</h1>
-		<p>Lien vers la 
-			<a href="https://symfony.com/doc/current/index.html" target="_blank">
-				documentation de Symfony
-			</a>
-			.
-		</p>
+
+{% block body_content %}
+	<h1>Symfony</h1>
+	<p>Lien vers la 
+		<a href="https://symfony.com/doc/current/index.html" target="_blank">
+			documentation de Symfony
+		</a>
+		.
+	</p>
+	
+	<p>
+		<a href="{{ path('memo_twig') }}">Mémo Twig</a>
+	</p>
+	
+	<p>
+		<a href="{{ path('memo_git') }}">Mémo Git</a>
+	</p>
 		
 {% endblock %}
 		

@@ -29,9 +29,62 @@ class DefaultController extends Controller
     }
     
     /**
+     * @Route("/memo_twig", name="memo_twig")
+     */
+    public function memo_twigAction() {
+    	return $this->render('default/memo_twig.html.twig', array(
+				'text' => 'TEXTE EN MAJUSCULE'
+		));
+    }
+    
+    /**
+     * @Route("/memo_git", name="memo_git")
+     */
+    public function memo_gitAction() {
+    	return $this->render('default/memo_git.html.twig');
+    }
+    
+    /**
      * @Route("/part1", name="part1")
      */
     public function part1Action() {
     	return $this->render('part1/index.html.twig');
     }
+    
+    /**
+     * @Route("/part2", name="part2")
+     */
+    public function part2Action() {
+    	return $this->render('part2/index.html.twig');
+    }  
+    
+    /**
+     * @Route("/chap1_1", name="chap1_1")
+     */
+    public function part1_1Action() {
+    	return $this->render('part1/part1_1.html.twig');
+    }
+    
+    /**
+     * @Route("/chap1_2", name="chap1_2")
+     */
+    public function part1_2Action() {
+    	return $this->render('part1/part1_2.html.twig');
+    }
+    
+    /**
+     * @Route("/chap1_3", name="chap1_3")
+     */
+    public function part1_3Action() {
+    	return $this->render('part1/part1_3.html.twig');
+    }
+    
+
+    /**
+     * @Route("/chap2_1", name="chap2_1")
+     */
+    public function part2_1Action() {
+    	return $this->render('part2/part2_1.html.twig');
+    }
+    
 }
