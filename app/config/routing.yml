@@ -1,16 +1,11 @@
-<<<<<<< HEAD
-=======
+
 oc_platform:
     resource: "@OCPlatformBundle/Resources/config/routing.yml"
-    prefix:   /platform
+    prefix:   /
 
->>>>>>> 2b525a37c615fe267b03b451abdfab2a3c7ff139
 app:
     resource: "@AppBundle/Controller/"
     type:     annotation
     prefix:    /
 
-oc_platform:
-    resource: "@OCPlatformBundle/Resources/config/routing.yml"
-    prefix:   /
 
