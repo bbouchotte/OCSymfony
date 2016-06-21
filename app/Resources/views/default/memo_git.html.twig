@@ -1,0 +1,136 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mémo Twig{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}
+	<h1>Gérer son code avec Git et GitHub</h1>
+	
+	<a href="#commandes">Résumé des commandes</a>
+	
+	<p>Commit: trace, série de modifications sur l'ensemble des fichiers du projet.</p>
+	<p>Ex d'historique: Commit première passe, Commit PHP ajouté, Commit texte validé</p>
+	<p>Diférents logiciels de gestion de version SVN, CVS, GIT (créé par Linus Torvalds)</p>
+	<p>Différents modèles de logiciels de gestion de version:<p>
+	<ul>
+		<li>Modèle centralisé: Il faut passer par un serveur central pour faire quoi que ce soit (GIT, Mercurial, Bazaar).</li>
+		<li>Modèle distribué: (~pear tot pear), pas de serveur, tout le monde a toutes les versions (SVN, CVS).</li>
+	</ul>
+	<p>Installation: Téléchargez la dernière version de Git sur : http://git-scm.com/downloads</p>
+	<pre>git config --global user.name "bbouchotte"
+git config --global user.email "benjamoule@gmail.com"</pre>
+	
+	<h2>Faire son premier commit</h2>
+	<pre>git status
+fatal: not a git repository</pre>
+	<p>Le répértoire courant doit être considéré comme un repository Git:</p>
+	<pre>git init
+Dépôt Git vide initialisé dans /var/www/html/...</pre>
+	<pre>git add [nomFichier.ext]
+git commit -am "Decription du commit" (m: message, a: tous les fichiers modifiés)</pre>
+
+	<h2>Lire l'historique</h2>
+	<pre>git log</pre><p>(Q pour quitter)</p>
+		<p>sha: identifiant du commit</p>
+		
+	<h2>Se positionner sur un commit donné</h2>
+	<pre>git checkout [numéro sha]
+git checkout master</pre>
+
+	<h2>Un remote qu'est-ce que c'est</h2>
+	<p>Un autre ordi ou service externe comme GitHub ou BitBucket</p>
+	<p>workflow: ecrire le code, faire des commits, envoi des commits sur un remote<p></p>
+	
+	<h2>GitHub</h2>
+	<p>Service en ligne qui propose un hébergement gratuit de tout repository open source, payant pour le code privé.</p>
+	
+	<h2>Récupérer du code d'un autre repository</h2>
+	<p>Copier l'url https puis dans le dossier:</p>
+	<pre>git clone https://....</pre>
+	<p>Ou</p>
+	<pre>git remote add origin https://github.com/bbouchotte/LearnAndTrain.git</pre>
+	
+	<h2>Créer son repository</h2>
+	<p>Check "Initialize this repository with a README" si projet non créé sur ma machine</p>
+	
+	<h2>Envoyer son code sur GitHub</h2>
+	<pre>git remote add origin https://github.com/bbouchotte/LearnAndTrain.git</pre>
+	<pre>git push origin master</pre>
+	<p>push: envoi, origin: nom de mon remote, master: nom de la branche(code courant)</p>
+	
+	<h2>Récupérer les dernières modifications depuis un autre ordi</h2>
+	<p>Pour ne pas refaire un git clone à chaque fois</p>
+	<pre>git pull origin master</pre>
+	
+	<h2>Créer des branches</h2>
+	<p>Liste des branches:</p>
+	<pre>git branch</pre>
+	<p>Créer une branche:</p>
+	<pre>git branch mon-test</pre>
+	<p>Se positionner sur une branche</p>
+	<pre>git checkout mon-test</pre>
+	<p>Créer et se positionner sur une branche</p>
+	<pre>git checkout -b ma-branche</pre>
+	
+	<h2>Fusionner des branches</h2>
+	<pre>git merge mon-test</pre>
+	
+	<h2>Gérer un conflit</h2>
+	<p>Si un fichier a été modifier dans deux branches => conflit lors du merge</p>
+	<p>Après avoir résolu dans le conflit, inutile de mettre un message lors du commit</p>
+	
+	<h2>Savoir qui a fait une modification</h2>
+	<pre>git blame [fichier]</pre>
+	<p>Voir ce qu'il s'est passé exactement</p>
+	<pre>git show [sha]</pre>
+	
+	<h2>Ignorer des fichiers</h2>
+	<p>Mettre les fichiers ignorés dans .gitignore</p>
+	
+	<h2>Eviter les commits superflus</h2>
+	<p>Mettre en suspend les dernières modifs:</p>
+	<pre>git stash</pre>
+	<p>Prendre en compte ces modifs: (pop supprime le stash)</p>
+	<pre>git stash pop</pre>
+	<p>Peut se faire avec les branches</p>
+	
+	<h2>Contribuer à des projets open source</h2>
+	<p>Procéder à une pull request</p>
+	<p>Fork : prendre une copie du projet sur notre compte GitHub</p>
+	<p>Cloner le projet</p>
+	<p>Lire le fichier README.md -> contributing</p>
+	
+	<pre id="commandes">git init
+git config --global user.name "bbouchotte"
+git config --global user.email "benjamoule@gmail.com"
+git clone https://....
+	ou
+git remote add origin https://github.com/bbouchotte/LearnAndTrain.git
+git add *
+git commit -am ""
+git push origin master
+git pull origin master</pre>
+
+	<h4>Codes fournis par GitHub</h4>
+	<p>create a new repository on the command line</p>
+	<pre>echo "# git" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin https://github.com/bbouchotte/git.git
+git push -u origin master</pre>
+	<p>push an existing repository from the command line</p>
+	<pre>git remote add origin https://github.com/bbouchotte/git.git
+git push -u origin master</pre>
+	
+	 
+	
+{% endblock %}
+
+
+

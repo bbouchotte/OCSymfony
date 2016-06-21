@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+	{% block title %}
+	
+		{{ parent() }}- Part 1
+		
+	{% endblock %}
+
+	{% block body %}
+	
+		{{ parent() }}
+	
+	{% endblock %}
+	
+	{% block body_content %}	
+
+		<h3>
+			Partie 2 - Les bases de Symfony
+		</h3>
+		<ul>
+			<li>
+				<a href="{{ path('chap2_1') }}" >
+					2.1 Mon premier « Hello World ! » avec Symfony 
+				</a>	
+			</li>
+		</ul>
+		
+
+		
+	{% endblock %}	

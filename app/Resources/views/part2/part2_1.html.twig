@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap2.1
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/mon-premier-hello-world-avec-symfony">
+			Chap 2.1 - Mon premier « Hello World ! » avec Symfony 
+		</a>
+	</h3>
+	
+	<h4>Fichier de routes</h4>
+	<pre># src/OC/PlatformBundle/Resources/config/routing.yml
+hello_the_world:
+    path:     /hello-world
+    defaults: { _controller: OCPlatformBundle:Advert:index }</pre>
+    
+    <p>Indenter avec des espaces les fichiers YAML(.yml).</p>
+    <p> définir l'encodage du fichier en « UTF-8 sans BOM »</p>
+    
+    <h4>Le controleur</h4>
+    <p>Le contrôleur est la « glu » de notre site, il « utilise » tous les autres composants (base de données, formulaires, templates, etc.) pour générer la réponse suite à notre requête ;</p>
+	<pre>
+// src/OC/PlatformBundle/Controller/AdvertController.php
+
+namespace OC\PlatformBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Response;
+
+class AdvertController {
+
+    public function indexAction() {
+        return new Response("Notre propre Hello World !");
+    }
+
+}</pre>
+	
+	<p>Ne pas oublier le suffixe action à la méthode</p>
+	<h4>Les templates avec Twig</h4>
+	<pre>// src/OC/PlatformBundle/Controller/AdvertController.php
+
+namespace OC\PlatformBundle\Controller;
+
+// N'oubliez pas ce use :
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Response;
+
+class AdvertController extends Controller {
+  public function indexAction() {
+    $content = $this->get('templating')->render('OCPlatformBundle:Advert:index.html.twig');
+    return new Response($content);
+  }
+}</pre>
+	<p>$this->get('mon_service') => utilisation d'un service.</p>
+	<p>Utilisation d'une variable:</p>
+	<pre>$content = $this
+    ->get('templating')
+    ->render('OCPlatformBundle:Advert:index.html.twig', array('nom' => 'winzou'))
+;</pre>
+	<pre>Hello {{ '{{ nom }}' }} !</pre>
+	
+	<h4>Nettoyage du cache</h4>
+	<pre>php bin/console cache:clear --env=prod</pre>
+	<pre>php bin/console cache:clear</pre>
+	<p>Parfois, il se peut que la commande cache:clear génère des erreurs lors de son exécution. Dans ce cas, essayez de relancer la commande, parfois une deuxième passe peut résoudre les problèmes. Dans le cas contraire, supprimez le cache à la main en supprimant simplement le répertoire var/cache/dev (ou var/cache/prod suivant l’environnement).</p>
+	
+	<h4>En résumé</h4>
+	<ul>
+		<li>Le rôle du routeur est de déterminer quel route utiliser pour la requête courante.</li>
+		<li>Le rôle d'une route est d'associer une URL à une action du contrôleur.</li>
+		<li>Le rôle du contrôleur est de retourner au noyau un objet Response, qui contient la réponse HTTP à envoyer à l'internaute (page HTML ou redirection).</li>
+		<li>Le rôle des vues est de mettre en forme les données que le contrôleur lui donne, afin de former une page HTML, un flux RSS, un e-mail, etc.</li>
+	</ul>
+
+		
+{% endblock %}	
