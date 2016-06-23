@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap2.2
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/le-routeur-de-symfony">
+			Chap 2.2 - Le routeur de Symfony
+		</a>
+	</h3>
+	
+	<h4>Fonctionnement</h4>
+	<p>Fichier de mapping des routes (en français, fichier de correspondance).</p>
+	<p>=> Correspondance entre une url et un jeu de paramètres dont _controller</p>
+	<pre>oc_platform_view_slug:
+    path:      /platform/{year}/{slug}.{format}
+    defaults:
+        _controller: OCPlatformBundle:Advert:viewSlug
+        _format:      html
+    # ou
+    #defaults: { _controller: OCPlatformBundle:Advert:viewSlug, _format: html }
+    requirements:
+        year:   \d{4}
+        _format: html|xml</pre>
+	<p>path: url à capturer</p>
+	<p>defaults: paramètres de la route</p>
+	<p>Le routeur parcourt les route une à une et s'arrête à la première qui fonctionne et envoie les informations au kernel (controleur, paramètres...).</p>
+	<p>Voir dans le profiler (click sur le nom de la route) l'onglet routing.</p>
+	<p>
+		Cours sur les expressions régulières: 
+		<a href="https://openclassrooms.com/informatique/cours/concevez-votre-site-web-avec-php-et-mysql/les-expressions-regulieres-partie-1-2">
+			Concevez votre site web avec PHP et MySQL
+		</a>
+	</p>
+	<p>{_format}: paramètre système, avant d'envoyer la réponse au navigateur, le header Content-type:... sera ajouté.</p>
+	<p>{_locale}: langue, {_controller}: on ne le met jamais dans le path mais c'est un paramètre de route aussi.</p>
+	
+		
+	<h4>Convention pour le nom du controleur.</h4>
+	<p>oc_platform_view_slug: nom de la route, doit être unique. Peut servir à générer des url.</p>
+	<p>OCPlatformBundle: nom du bundle dans lequel aller chercher le contrôleur. Symfony ira voir dans src/OC/PlatformBundle.</p>
+	<p>Advert: nom du controleur à ouvrir, src/OC/PlatformBundle/Controller/AdvertController.php</p>
+	<p>viewSlug: action à exécuter au sein du controleur, public function viewSlugAction().</p>
+
+	<pre>public function viewSlugAction($year, $slug, $format) {
+    	return new Response("On pourrait afficher l'annonce correspondant au
+            slug '".$slug."', créée en ".$year." et au format ".$format.".");
+    }</pre>
+	<p>L'ordre des arguments n'a pas d'importance</p>
+	
+	<h4>Ajouter un préfixe lors de l'import de nos routes</h4>
+	<pre># app/config/routing.yml
+oc_platform:
+    resource: "@OCPlatformBundle/Resources/config/routing.yml"
+    prefix:   /platform</pre>
+	
+	<h4>Générer des URL</h4>
+	<p>Depuis le controleur.</p>
+	<pre>use Symfony\Component\Routing\Generator\UrlGeneratorInterface; // pour url absolue
+...
+$url = $this->get('router')->generate(
+        'oc_platform_view', // 1er argument : le nom de la route
+        array('id' => 5)    // 2e argument : les valeurs des paramètres
+    );
+// méthode raccourcie: 
+$url = $this->generateUrl('oc_platform_home');
+// $url vaut « /platform/advert/5 »
+
+// url absolue: troisième argument de la méthode generate à UrlGeneratorInterface::ABSOLUTE_URL
+$url = $this->get('router')->generate('oc_platform_home', array(), UrlGeneratorInterface::ABSOLUTE_URL);        
+        
+return new Response("L'URL de l'annonce d'id 5 est : ".$url);</pre>
+	<p>Depuis Twig.</p>
+	<pre>{% filter escape %}{% verbatim %}<a href="{{ path('oc_platform_view', { 'id': advert_id }) }}">
+    Lien vers l'annonce d'id {{ advert_id }}
+</a>{% endverbatim %}{% endfilter %}</pre>
+	
+	<h4>En résumé</h4>
+	<ul>
+		<li>Pour plus d'informations sur le système de routes, n'hésitez pas à lire la 
+			<a href="http://symfony.com/fr/doc/current/book/routing.html">
+				documentation officielle.
+			</a>
+		</li>
+		<li>Une route est composée au minimum de deux éléments : l'URL à faire correspondre (son path), et le contrôleur à exécuter (paramètre _controller).</li>
+    	<li>Le routeur essaie de faire correspondre chaque route à l'URL appelée par l'internaute, et ce dans l'ordre d'apparition des routes : la première route qui correspond est sélectionnée.</li>
+    	<li>Une route peut contenir des paramètres, facultatifs ou non, représentés par les accolades {paramètre}, et dont la valeur peut être soumise à des contraintes via la section requirements.</li>
+    	<li>Le routeur est également capable de générer des URL à partir du nom d'une route, et de ses paramètres éventuels.</li>
+	</ul>
+
+		
+{% endblock %}	
