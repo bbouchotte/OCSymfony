@@ -93,4 +93,17 @@ class DefaultController extends Controller
     	return $this->render('part2/part2_2.html.twig');
     }
     
+    /**
+     * @Route("/chap2_3", name="chap2_3")
+     */
+    public function part2_3Action() {
+    	return $this->render('part2/part2_3.html.twig');
+    }
+    
+    /**
+     * @Route("/chap2_4", name="chap2_4")
+     */
+    public function part2_4Action() {
+    	return $this->render('part2/part2_4.html.twig');
+    }
 }

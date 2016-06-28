@@ -1,0 +1,189 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap2.3
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/les-controleurs-avec-symfony">
+			Chap 2.3 - Les contrôleurs avec Symfony
+		</a>
+	</h3>
+	
+	<p>
+		<a href="http://symfony.com/fr/doc/current/book/controller.html">
+			Documentation officielle
+		</a>
+	</p>
+	
+	<h4>Définition des méthodes</h4>
+	<p>Nos méthodes vont être appelées par le noyau : elles doivent donc respecter le nom et les arguments que nous avons définis dans nos routes et se trouver dans le scope « public ».</p>
+	
+	<h4>Les paramètres hors-route</h4>
+	<p>/platform/advert/5?tag=developer. Il faut ajouter un argument à la méthode avec le typehint Request.</p>
+	<pre>namespace OC\PlatformBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request; // N'oubliez pas ce use !
+use Symfony\Component\HttpFoundation\Response;
+
+class AdvertController extends Controller {
+    public function viewAction($id, Request $request)     {
+    $tag = $request->query->get('tag');
+
+    return new Response(
+      "Affichage de l'annonce d'id : ".$id.", avec le tag : ".$tag
+    );    }
+}</pre>
+	<p>Le kernel ajoute la requête aux arguments avant d'exécuter les controleur</p>
+	<p>Les types de paramètre:</p>
+	<ul>
+		<li><b>Type de paramètres - Méthode Symfony - Méthode traditionnelle - Exemple</b></li>
+ 		<li>Variables d'URL - $request->query - $_GET - $request->query->get('tag')</li>
+ 		<li>Variables de formulaire - $request->request - $_POST - $request->request->get('tag')</li>
+		<li>Variables de cookie - $request->cookies - $_COOKIE - $request->cookies->get('tag')</li>
+		<li>Variables de serveur - $request->server - $_SERVER - $request->server->get('REQUEST_URI')</li>
+		<li>Variables d'entête - $request->headers - $_SERVER['HTTP_*'] - $request->headers->get('USER_AGENT')</li>
+		<li>Paramètres de route - $request->attributes - n/a - On utilise $id dans les arguments de la méthode, mais vous pourriez également faire $request->attributes->get('id')</li>
+	</ul>
+	<p>De cette façon, pas besoin de tester l'existence, si le paramètre n'est pas défini, cela retournera une chaine vide et non une erreur.</p>
+	
+	<h4>Les autres méthodes de l'objet Request</h4>
+	<p>Récupérer la méthode de la requête HTTP:</p>
+	<pre>if ($request->isMethod('POST')) {
+  // Un formulaire a été envoyé, on peut le traiter ici
+}</pre>
+	<p>Savoir si la requête est une requête AJAX</p>
+	<pre>if ($request->isXmlHttpRequest()) {
+  // C'est une requête AJAX, retournons du JSON, par exemple
+}</pre>
+	<p>Toutes les autres sur <a href="http://api.symfony.com/3.0/Symfony/Component/HttpFoundation/Request.html">le site de Symfony</a>.</p>
+	
+	<h4>Décomposition de la construction d'un objet Response</h4>
+	<p>On pourrait construire et retourner une réponse, par ex une page d'erreur, avec cette méthode longue et inutilisée:</p>
+	<pre>namespace OC\PlatformBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class AdvertController extends Controller {
+  public function viewAction($id)  {
+    $response = new Response();     // On crée la réponse sans lui donner de contenu pour le moment
+    $response->setContent("Ceci est une page d'erreur 404");	// On définit le contenu
+    $response->setStatusCode(Response::HTTP_NOT_FOUND);	// On définit le code HTTP à « Not Found » (erreur 404)
+    return $response;	// On retourne la réponse
+  }
+}</pre>
+	<p>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony2/personnaliser-les-pages-d-erreur">
+			Comment personnaliser ses pages d'erreur.
+		</a>
+	</p>
+
+	<h4>Réponses et vues</h4>
+	<p>Utilisation de la méthode render() qui est un raccourci de la méthde renderResponse():</p>
+	<pre>public function viewAction($id, Request $request) {
+    $tag = $request->query->get('tag');	// On récupère notre paramètre tag
+    return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
+      'id'  => $id,
+      'tag' => $tag,
+    ));
+    // au lieu de 
+    //return $this->get('templating')->renderResponse('OCPlatformBundle:Advert:view.html.twig',
+    //  array('id'  => $id, 'tag' => $tag)
+    //);
+  }</pre>
+	<h4>Réponse et redirection</h4>
+	<pre>namespace OC\PlatformBundle\Controller;
+
+use ...
+use Symfony\Component\HttpFoundation\RedirectResponse; // N'oubliez pas ce use
+
+class AdvertController extends Controller {
+  public function viewAction($id) {
+    // $url = $this->get('router')->generate('oc_platform_home');
+    // return new RedirectResponse($url);
+    // Méthode raccourcie:   
+	return $this->redirectToRoute('oc_platform_home');  }
+}</pre>
+	<p>On peut intercepter la redirection en mettant intercept_redirects  à true dans le fichier app/config/config_dev.yml.</p>
+	<p>Symfony affiche alors une page avec la toolbar et plein d'informations utiles pour déboguer par ex lors de requêtes SQL.</p>
+	
+	<h4>Changer le Content-type de la réponse</h4>
+	<p>Prenons l'exemple suivant : vous recevez une requête AJAX et souhaitez retourner un tableau en JSON :</p>
+	<pre><use Symfony\Component\HttpFoundation\JsonResponse;
+// ...
+
+public function viewAction($id) {
+  return new JsonResponse(array('id' => $id));
+}</pre>
+	
+	<h4>Manipuler la session</h4>
+	<pre>namespace OC\PlatformBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+
+class AdvertController extends Controller {
+  public function viewAction($id, Request $request) {
+    $session = $request->getSession();	// Récupération de la session
+    $userId = $session->get('user_id');	// On récupère le contenu de la variable user_id
+    $session->set('user_id', 91);	// On définit une nouvelle valeur pour cette variable user_id
+    return new Response("Je suis une page de test, je n'ai rien à dire");	// On n'oublie pas de renvoyer une réponse
+  }
+}</pre>
+	<p>On peut les variables de session dans le Profiler rubrique Request paragraphe « Session Attributes ».</p>
+	
+	<h4>Les messages flash</h4>
+	<pre><?php
+
+// src/OC/PlatformBundle/Controller/AdvertController.php
+
+namespace OC\PlatformBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+
+class AdvertController extends Controller {
+  public function addAction(Request $request) {
+    $session = $request->getSession();    
+    // Bien sûr, cette méthode devra réellement ajouter l'annonce
+    // Mais faisons comme si c'était le cas
+    $session->getFlashBag()->add('info', 'Annonce bien enregistrée');
+    // Le « flashBag » est ce qui contient les messages flash dans la session
+    // Il peut bien sûr contenir plusieurs messages :
+    $session->getFlashBag()->add('info', 'Oui oui, elle est bien enregistrée !');
+    // Puis on redirige vers la page de visualisation de cette annonce
+    return $this->redirectToRoute('oc_platform_view', array('id' => 5));
+  }
+}</pre>
+	<pre>{% verbatim %}{% for message in app.session.flashbag.get('info') %}
+    Message flash : {{ message }}
+{% endfor %} {% endverbatim %}</pre>
+	<p>La variable Twig {{ '{{ app }}' }} est une variable globale, disponible partout dans vos vues. </p>
+	
+	
+		
+	
+	
+	<h4>En résumé</h4>
+	<ul>
+		<li>Le rôle du contrôleur est de retourner un objet Response : ceci est obligatoire !</li>
+		<li>Le contrôleur construit la réponse en fonction des données qu'il a en entrée : paramètre de route et objet Request.</li>
+    	<li>Le contrôleur se sert de tout ce dont il a besoin pour construire la réponse : la base de données, les vues, les différents services, etc.</li>
+	</ul>
+
+		
+{% endblock %}	

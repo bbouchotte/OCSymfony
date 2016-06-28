@@ -5,32 +5,46 @@ namespace OC\PlatformBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 
 class AdvertController extends Controller
 
 {
 	public function indexAction($page) {
-		return new Response("Acceuil avec la page n°".$page);
+		if ($page < 1) {
+			throw new NotFoundHttpException('Page "'.$page.'" inexistante.');
+		}
+		return $this->render('OCPlatformBundle:Advert:index.html.twig');
 	}
     
     public function viewAction($id)
     {    
-    	return new Response("Affichage de l'annonce d'id : ".$id);
+    	return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
+    		'id' => $id
+    	));
     }
 
-    public function addAction()
+    public function addAction(Request $request)
     {
-    	return new Response("Ajout de l'annonce ");
-    }
+    	if ($request->isMethod('POST')) {
+    		$session->getFlashBag()->add('notice', 'Annonce bien enregistrée.');
+       		return $this->redirectToRoute('oc_platform_view', array( 'id' => 5));
+    	}
+    	return $this->render('OCPlatformBundle:Advert:add.html.twig');
+	}
     
-    public function editAction($id)
+    public function editAction($id, Request $request)
     {
-    	return new Response("Edition de l'annonce d'id : ".$id);
+    	if ($request->isMethod('POST')) {
+    		$request->getSession()->getFlashBag()->add('notice', 'Annonce bien modifiée.');
+    		return $this->redirectToRoute('oc_platform_view', array( 'id' => 5));
+    	}
+    	return $this->render('OCPlatformBundle:Advert:edit.html.twig');
     }
     
     public function deleteAction($id)
     {
-    	return new Response("Supression de l'annonce d'id : ".$id);
+    	return $this->render('OCPlatformBundle:Advert:delete.html.twig');
     }
     
     
@@ -47,6 +61,13 @@ class AdvertController extends Controller
     public function viewSlugAction($year, $slug, $_format) {
     	return new Response("On pourrait afficher l'annonce correspondant au
             slug '".$slug."', créée en ".$year." et au format ".$_format.".");
+    }
+    
+    public function errorAction() {
+    	$response = new Response();     // On crée la réponse sans lui donner de contenu pour le moment
+    	$response->setContent("Ceci est une page d'erreur 404");	// On définit le contenu
+    	$response->setStatusCode(Response::HTTP_NOT_FOUND);	// On définit le code HTTP à « Not Found » (erreur 404)
+    	return $response;
     }
 
 }
