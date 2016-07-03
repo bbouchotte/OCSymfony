@@ -39,7 +39,8 @@ oc_platform_delete:
 
 hello_the_world:
     path:     /hello-world
-    defaults: { _controller: OCPlatformBundle:Advert:hello_world }
+    defaults:
+        _controller: OCPlatformBundle:Advert:hello_world 
 
 oc_platform_view_slug:
     path:      /{year}/{slug}.{_format}

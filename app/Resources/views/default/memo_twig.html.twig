@@ -11,6 +11,21 @@
 {% block body_content %}
 	<h2>Mémo Twig</h2>
 	
+	<p>
+		<a href="https://openclassrooms.com/courses/utilisation-de-twig-un-moteur-de-templates" target="_blank">
+			Cours OC
+		</a>
+		, 
+		<a href="http://twig.sensiolabs.org/documentation">
+			documentation officielle
+		</a>
+		, 
+		<a href="{{ path('chap2_4') }}">
+			Chapitre 2-4
+		</a>
+		.
+	</p>
+	
 	<h4>Création d'une URL relative</h4>
 	<pre>{% filter escape %}{% verbatim %}<a href="{{ path('blog_show', {'page': 5}) }}">
     Read this blog post.
@@ -20,18 +35,13 @@
 	<pre>{% filter escape %}{% verbatim %}<a href="{{ url('blog_show', {'page': 5}) }}">
     Read this blog post.
 </a>{% endverbatim %}{% endfilter %}</pre>
-	
-	<h3>
-		<a href="https://openclassrooms.com/courses/utilisation-de-twig-un-moteur-de-templates" target="_blank">
-			Cours OC
-		</a>
-	</h3>
 	<p>
 		{{  '{{ variable }}' }} pour afficher une variable.<br />
 		{{  '{# commentaire  #}' }}<br />
 		{% verbatim %}
 			{{ array['key'] }} et {{ array.key }}font exactement la même chose <br />
-		{% endverbatim %}
+			Identité : {{ nom ~ " " ~ prenom }} concaténation<br />
+        {% endverbatim %}
 	</p>
 	
 	<h4>Echapper les accolades</h4>
@@ -41,8 +51,7 @@
 		{% endverbatim %}
 	</p>
 	<p>Ou un bloc</p>
-	<p>	{{ '{% verbatim %}' }}</p>
-	<p>	{{ '{% endverbatim %}' }}</p>
+	<p>	{{ '{% verbatim %}' }} ... {{ '{% endverbatim %}' }}</p>
 	
 	
 	<h4>Les filtres</h4>
@@ -51,9 +60,12 @@
 		<br />
 		{{  '{{ text }}' }} : {{ text }} <br />
 		{% verbatim %}
-			{{ text | lower | title}} :
+			{{ text|lower|title}} :
 		{% endverbatim %}
-		{{ text | lower | title}}
+		{{ text|lower|title}} </br>
+		{% verbatim %}
+			Date : {{ date|date('d/m/Y') }} filtre avec argument (date au format Datetime)
+		{% endverbatim %}
 	</p>
 	
 	<h4>Les filtres sur les blocs</h4>
@@ -76,7 +88,22 @@
 			{% endautoescape %}
 		{% endverbatim %}
 	</p>
-		
+	
+	<h4>Quelques autres filtres:</h4>
+	{% verbatim %}
+    	<p>{{ var|upper }} Met toutes les lettres en majuscules.</p>
+    	<p>{{ var|striptags }} Supprime toutes les balises XML.</p>
+    	<p>{{ date|date('d/m/Y') }} Formate la date selon le format donné en argument. La variable en entrée doit être une instance de Datetime. Date d'aujourd'hui : {{ "now"|date('d/m/Y') }}</p>
+    	<p>{{ "Il y a %s pommes et %s poires"|format(153, nb_poires) }} Insère des variables dans un texte, équivalent à printf.</p>
+    	<p>Longueur de la variable : {{ texte|length }} Nombre d'éléments du tableau : {{ tableau|length }} Retourne le nombre d'éléments du tableau, ou le nombre de caractères d'une chaîne.</p>
+    {% endverbatim %}
+    <p>
+    	Documentation de tous les filtres: 
+    	<a href="http://twig.sensiolabs.org/doc/filters/index.html">
+    		http://twig.sensiolabs.org/doc/filters/index.html
+    	</a>
+    </p>
+    
 	<h4>Les conditions</h4>
 	{% verbatim %}
 		<pre>{% if online > 1 %}
@@ -87,6 +114,7 @@
     Il n'y a aucun utilisateur en ligne. Cette phrase ne sera, en principe, jamais lue sauf par toi. Ô grand développeur !.
 {% endif %}</pre>
 	{% endverbatim %}
+	
 	
 	<h4>Les tests</h4>
 	<p>defined, divisbleby, empty</p>

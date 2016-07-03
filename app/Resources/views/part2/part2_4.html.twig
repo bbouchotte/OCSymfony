@@ -20,20 +20,179 @@
 	</h3>
 	
 	<p>
-		<a href="">
-			Documentation officielle
+		<a href="{{ path('memo_twig') }}">
+			Mon mémo
+		</a>
+		, 
+		<a href="http://twig.sensiolabs.org/documentation">
+			documentation officielle
 		</a>
 	</p>
 	
-	<h4></h4>
-
-	
+	<p>Twig sécurise vos variables automatiquement : plus besoin de se soucier de htmlentities(), addslashes() ...</p>
+	<p>Les pages HTML, mails, flux RSS ... sont placés dans un template.</p>
 		
+	<h4>Récupérer le contenu d'un template</h4>
+	<p>Depuis un controleur:</p>
+	<pre>$contenu = $this->renderView('OCPlatformBundle:Advert:email.txt.twig', array(
+  'var1' => $var1,
+  'var2' => $var2
+));
+// Puis on envoie l'e-mail, par exemple :
+mail('moi@openclassrooms.com', 'Inscription OK', $contenu);</pre>
+
+	<h4>Précisions sur la syntaxe {% verbatim %} {{ objet.attribut }} {% endverbatim %}</h4>
+	<p>
+		Le fonctionnement de la syntaxe {% verbatim %} {{ objet.attribut }} {% endverbatim %} est un peu plus complexe qu'il n'en a l'air. Elle ne fait pas seulement objet->getAttribut. En réalité, voici ce qu'elle fait exactement :
+	</p>
+	<ul>
+	    <li>
+	    	Elle vérifie si objet est un tableau, et si attribut est un index valide. Si c'est le cas, elle affiche objet['attribut'].
+	    </li>
+	    <li>
+	    	Sinon, et si objet est un objet, elle vérifie si attribut est un attribut valide (public donc). Si c'est le cas, elle affiche objet->attribut.
+	    </li>
+	    <li>
+	    	Sinon, et si objet est un objet, elle vérifie si attribut() est une méthode valide (publique donc). Si c'est le cas, elle affiche objet->attribut().
+		</li>
+		<li>
+			Sinon, et si objet est un objet, elle vérifie si getAttribut() est une méthode valide. Si c'est le cas, elle affiche objet->getAttribut().
+		</li>
+		<li>
+			Sinon, et si objet est un objet, elle vérifie si isAttribut() est une méthode valide. Si c'est le cas, elle affiche objet->isAttribut().
+		</li>
+		<li>
+			Sinon, elle n'affiche rien et retourne null.
+		</li>
+	</ul>
+
+	<p>
+    	Documentation de tous les filtres: 
+    	<a href="http://twig.sensiolabs.org/doc/filters/index.html">
+    		http://twig.sensiolabs.org/doc/filters/index.html
+    	</a>
+    </p>
+    <p>On peut créer nos propres filtres.</p>
+    
+    <h4>Sécurité</h4>
+    <p>Toutes les variables sont échappées.</p>
+    <p>Dans le cas où vous voulez afficher volontairement une variable qui contient du HTML (JavaScript, etc.), et que vous ne voulez pas que Twig l'échappe, il vous faut utiliser le filtre raw.</p>
+    <pre>{% verbatim %} {{ ma_variable_html|raw }} {% endverbatim %}</pre>
+    
+    <h4>Les variables globales</h4>
+    {% verbatim %}
+    	<p>
+    	    {{ app.request }} La requête « request » qu'on a vue au chapitre précédent sur les contrôleurs.
+		</p>
+		<p>
+		    {{ app.session }} Le service « session » qu'on a vu également au chapitre précédent.
+		</p>
+		<p>
+		    {{ app.environment }} L'environnement courant : « dev », « prod », et ceux que vous avez définis.
+		</p>
+		<p>
+		    {{ app.debug }} True si le mode debug est activé, False sinon.
+		</p>
+		<p>
+		    {{ app.user }} L'utilisateur courant, que nous verrons également plus loin dans ce cours.
+		</p>
+    {% endverbatim %}
+	<p>Enregistrer ses propres variables globales:</p>
+	<pre># app/config/parameters.yml
+parameters:
+    # …
+    app_webmaster: moi-même</pre>
+	<pre># app/config/config.yml
+twig:
+    globals:
+        webmaster: %app_webmaster%</pre>
+
+	<h4>Condition if</h4>
+	<pre>{% filter escape %} {% verbatim %}{% if membre.age < 12 %}
+  Il faut avoir au moins 12 ans pour ce film.
+{% elseif membre.age < 18 %}
+  OK bon film.
+{% else %}
+  Un peu vieux pour voir ce film non ?
+{% endif %}{% endverbatim %} {% endfilter %}</pre>
+
+	<h4>Boucle for (avec clés)</h4>
+	<pre>{% filter escape %} {% verbatim %}<select>
+  {% for valeur, option in liste_options %}
+    <option value="{{ valeur }}">{{ option }}</option>
+  {% endfor %}
+</select>{% endverbatim %} {% endfilter %}</pre>
+	{% verbatim %}
+    	<p>La boucle for définit une variable {{ '{{ loop }}' }} au sein de la boucle</p>
+    	<p>{{ loop.index }} Le numéro de l'itération courante (en commençant par 1).</p>
+    	<p>{{ loop.index0 }} Le numéro de l'itération courante (en commençant par 0).</p>
+    	<p>{{ loop.revindex }} Le nombre d'itérations restantes avant la fin de la boucle (en finissant par 1).</p>
+    	<p>{{ loop.revindex0 }} Le nombre d'itérations restantes avant la fin de la boucle (en finissant par 0).</p>
+    	<p>{{ loop.first }} true si c'est la première itération, false sinon.</p>
+    	<p>{{ loop.last }} true si c'est la dernière itération, false sinon.</p>
+    	<p>{{ loop.length }} Le nombre total d'itérations dans la boucle</p>
+	{% endverbatim %}
+	<h4>Définition</h4>
+	<pre>{% filter escape %} {% verbatim %}{% set foo = 'bar' %}{% endverbatim %} {% endfilter %}</pre>
 	
+	<h4>Les tests utiles</h4>
+	<pre>{{ '{% if var is defined %} … {% endif %} {# pour vérifier si une variable existe #}' }}</pre>
+	<pre>{% filter escape %}{{ '{% for valeur in liste %}
+  <span class="{% if loop.index is even %}pair{% else %} {# odd: impair #}
+    impair{% endif %}">
+    {{ valeur }}
+  </span>
+{% endfor %}' }}{% endfilter %}</pre>
+	<p>
+		La documentation de tous les tests disponibles est dans 
+		<a href="http://twig.sensiolabs.org/doc/tests/index.html">
+			la documentation officielle de Twig.
+		</a>
+	</p>
+	
+	<h4>L'héritage de template</h4>
+	<pre>{% filter escape %} {% verbatim %}{# src/OC/PlatformBundle/Resources/views/layout.html.twig #}
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}OC Plateforme{% endblock %}</title>
+  </head>
+  <body>
+    {% block body %}
+    {% endblock %}
+  </body>
+</html>{% endverbatim %} {% endfilter %}</pre>
+	<pre>{% verbatim %}{# src/OC/PlatformBundle/Resources/views/Advert/index.html.twig #}
+
+{% extends "OCPlatformBundle::layout.html.twig" %}
+
+{% block title %}{{ parent() }} - Index{% endblock %}
+
+{% block body %}
+  Notre plateforme est un peu vide pour le moment, mais cela viendra !
+{% endblock %}{% endverbatim %}</pre>
+	
+	<h4>Le modèle « triple héritage »</h4>
+	<p>Pour bien organiser ses templates, une bonne pratique est sortie du lot. Il s'agit de faire de l'héritage de templates sur trois niveaux, chacun des niveaux remplissant un rôle particulier. Les trois templates sont les suivants :</p>
+	<ul>
+    	<li>Layout général : c'est le design de votre site, indépendamment de vos bundles. Il contient le header, le footer, etc. Dans app/Resources/views/layout.html.twig. Appelé par ::layout.html.twig</li>
+    	<li>Layout du bundle : il hérite du layout général et contient les parties communes à toutes les pages d'un même bundle. Par exemple, pour notre plateforme d'annonce, on pourrait afficher un menu particulier, rajouter « Annonces » dans le titre, etc.</li>
+    	<li>Template de page : il hérite du layout du bundle et contient le contenu central de votre page.</li>
+	</ul>
+	
+	<h4>Inclusion de template</h4>
+	<pre>{% verbatim %}{{ include("OCPlatformBundle:Advert:form.html.twig") }}{% endverbatim %}</pre>
+	
+	<h4>Inclusion de contrôleur</h4>
+	<pre>{% verbatim %}{{ render(controller("OCPlatformBundle:Advert:menu", {'limit': 3})) }}{% endverbatim %}</pre>
+	<p>Symfony déclenche une sous-requête en interne, c'est-à-dire que quasiment tout le process d'une requête dans Symfony est exécuté à nouveau sur cette inclusion de contrôleur. A utiliser avec modération donc !</p>
 	
 	<h4>En résumé</h4>
 	<ul>
-		<li></li>
+		<li>Un moteur de templates tel que Twig permet de bien séparer le code PHP du code HTML, dans le cadre de l'architecture MVC ;</li>
+		<li>Twig offre un système d'héritage (via {{ '{% extends %}' }}) et d'inclusion (via {{ '{{ include() }}' }} et {{ '{{ render() }}' }}) très intéressant pour bien organiser les templates ;</li>
+		<li>Le modèle triple héritage est très utilisé pour des projets avec Symfony.</li>
 	</ul>
 
 		
