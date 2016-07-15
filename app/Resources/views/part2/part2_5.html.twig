@@ -19,11 +19,85 @@
 		</a>
 	</h3>
 	
+	<p>Composer est un outil pour gérer les dépendances (bibliothèques) en PHP. Par ex, SwiftMailer est une dépendance.</p>
+	<p>Mise à jour des bibliothèques -> il faut les effectuer une à une pour s'assurer de corriger les bogues.</p>
+	<p>Ces bibliothèques peuvent elles-mêmes dépendre d'autres bibliothèques, cela vous oblige à gérer l'ensemble de ces dépendances (installation, mises à jour, etc.).</p>
+	<p>Ces bibliothèques ont chacune leur paramètres d'autoload, et vous devez gérer leur autoload pour chacune d'entre elles.</p>
+	<p><a href="www.packagist.org">www.packagist.org</a>: site centralisant les informations de chaque bibliothèque.</p>
+	<p>Un outil innovant… dans l'écosystème PHP</p>
+	<p>Installer Composer:</p>
+	<pre>php -r "eval('?>'.file_get_contents('http://getcomposer.org/installer'));"</pre>
+	<p>Mise à jour:</p>
+	<pre>php composer.phar self-update</pre>
+	<p>Si pour certaines bibliothèques Composer peut télécharger directement des archives contenant les sources, pour d'autres il doit utiliser un gestionnaire de versions tel que Git.</p>
+	<pre>sudo apt-get install git-core</pre>
+	<p>Le fichier composer.json:</p>
+	<p>Exemple:</p>
+	<pre>{
+  "require": {
+    "twig/extensions": "~1.0"
+  }
+}</pre>
+	<ul>
+		<li>"2.0.17" Un numéro de version exact</li>
+		<li>">=2.0,<2.6" Une plage de versions (Ainsi, Composer téléchargera la version la plus à jour).</li>
+		<li>"~2.1" Une plage de versions sémantique. Equivaut à ">=2.1,<3.0"</li>
+		<li>"2.0.*" Un numéro de version avec joker.</li>
+		<li>Un nom de branche "dev-XXX".</li>	
+	</ul>
+	<p>Mise à jour des dépendances:</p>
+	<pre>php composer.phar update</pre>
+	<p>... dans vendor/, composer a:</p>
+	<ul>
+		<li>téléchargé la dépendance "twig/extensions" que l'on a définie, dans vendor/twig/extensions ;</li>
+		<li>téléchargé la dépendance "twig/twig" de notre dépendance à nous, dans vendor/twig/twig ;</li>
+		<li>Composer a généré les fichiers nécessaires pour l'autoload, allez vérifier le fichier vendor/composer/autoload_namespaces.php.</li>
+	</ul>
+	
+	<h4>Installer un bundle avec Composer</h4>
+	<p>Pour l'exemple, nous allons installer le bundle DoctrineFixtureBundle, qui permet de préremplir la base de données avec des données, afin de bien tester votre application.</p>
+	<p>1. Trouver le nom du bundle (sur <a href="http://packagist.org/">packagist.org/</a>).</p>
+	<p>2. Determiner la version dun bundle (regarder les pré-requis).</p>
+	<p>3. Déclarer le bundle à composer dans composer.json:</p>
+	<pre>// …
+"require": {
+  "php": ">=5.5.9",
+  // …
+  "incenteev/composer-parameter-handler": "~2.0",
+  "doctrine/doctrine-fixtures-bundle": "~2.2"
+},
+// …</pre>
+	<p>4. Enregistrer le bundle dans app/AppKernel.php:</p>
+	<pre><?php
+// …
+  if (in_array($this->getEnvironment(), array('dev', 'test'))) {
+      // ...
+      $bundles[] = new Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle();
+    }
+// …</pre>
 
-
+	<h4>Gérer l'autoload d'une bibliothèque manuellement</h4>
+	<pre>// composer.json
+{
+  // …
+  "autoload": {
+    "psr-4": {
+      "": "src/",
+      "VotreNamespace": "chemin/vers/la/bibliotheque"
+    },
+    "files": [ "app/AppKernel.php" ]
+  },
+  // …
+}</pre>
 
 	<h4>En résumé</h4>
 	<ul>
+		<li><a href="http://getcomposer.org/">Documentation Composer.</a></li>
+		<li>Composer est un outil pour gérer les dépendances d'un projet en PHP, qu'il soit sous Symfony ou non.</li>
+		<li>Le fichier composer.json permet de lister les dépendances que doit inclure Composer dans votre projet.</li>
+		<li>Composer détermine la meilleure version possible pour vos dépendances, les télécharge, et configure leur autoload tout seul.</li>
+		<li>Composer trouve toutes les bibliothèques sur le site http://www.packagist.org, sur lequel vous pouvez envoyer votre propre bibliothèque si vous le souhaitez.</li>
+		<li>La très grande majorité des bundles Symfony sont installables avec Composer, ce qui simplifie énormément leur utilisation dans un projet.</li>
 	</ul>
 
 		
