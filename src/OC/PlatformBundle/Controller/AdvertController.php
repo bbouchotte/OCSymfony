@@ -66,6 +66,10 @@ class AdvertController extends Controller
     			'date'    => new \Datetime()
     	);
     	
+    	// Test service:
+    	$serviceTest = $this->get('oc_platform.test');
+    	$advert = $serviceTest->get();
+    	
     	return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
     			'advert' => $advert
     	));
@@ -73,6 +77,16 @@ class AdvertController extends Controller
 
     public function addAction(Request $request)
     {
+    	// test service:
+    	$antispam = $this->get('oc_platform.antispam');
+    	$text = "vdffdgd";
+    	if ($antispam->isSpam($text)) {
+    		throw new \Exception("Votre message a été détecté comme un spam. " .
+    				"Langue: " . $antispam->locale() . ". " .
+    				"Longueur minimum: " . $antispam->minLenght() 
+   				);
+    	}    	
+    	
     	if ($request->isMethod('POST')) {
     		$session->getFlashBag()->add('notice', 'Annonce bien enregistrée.');
        		return $this->redirectToRoute('oc_platform_view', array( 'id' => 5));
@@ -93,6 +107,9 @@ class AdvertController extends Controller
     			'content' => 'Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…',
     			'date'    => new \Datetime()
     	);
+    	
+    	// Avec un service pour s'entrainer
+    	//$advert = $this->get('')
     	
     	return $this->render('OCPlatformBundle:Advert:edit.html.twig', array(
     			'advert' => $advert

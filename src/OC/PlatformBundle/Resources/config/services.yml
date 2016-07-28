@@ -1,4 +1,17 @@
+parameters:
+    minLength: 10
+
 services:
 #    oc_platform.example:
 #        class: OC\PlatformBundle\Example
 #        arguments: ["@service_id", "plain_value", %parameter%]
+    oc_platform.antispam:
+        class: OC\PlatformBundle\Antispam\OCAntispam
+        arguments: [ "@mailer", '%locale%', '%minLength%' ]
+#            - "@mailer"
+#            - "%locale%"
+#            - '%minLength%'
+# '%locale%' définit dans le fichier app/config
+
+    oc_platform.test:
+        class: OC\PlatformBundle\ServiceTest\OCServiceTest

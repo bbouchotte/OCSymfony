@@ -114,5 +114,19 @@ class DefaultController extends Controller
     	return $this->render('part2/part2_5.html.twig');
     }
 
-
+    /**
+     * @Route("/chap2_6", name="chap2_6")
+     */
+    public function part2_6Action() {
+    	return $this->render('part2/part2_6.html.twig');
+    }
+    
+    /**
+     * @Route("/DependencyInjectionExample", name="DependencyInjectionExample")
+     */
+    public function DependencyInjectionExampleAction() {
+    	return $this->render('part2/DependencyInjectionExample.html.twig');
+    }
+    
+    
 }

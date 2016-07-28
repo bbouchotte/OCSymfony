@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap2.6
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/les-services-theorie-et-creation-1">
+			Chap 2.6 - Les services, théorie et création
+		</a>
+	</h3>
+	
+	<p>Chaque objet est défini en tant que service et le conteneur de service permet d'instancier, d'organiser et de récupérer les nombreux services de votre application.</p>
+	
+	<h4>Qu'est-ce qu'un service?</h4>
+	<p>Un service est un objet PHP, une simple classe</p>
+	<p>La configuration d'un service est un moyen de l'enregistrer dans le conteneur de service. Par exemple, on peut accéder à la classe Swift_Mailer grâce au service mailer.</p>
+	
+	<h4>Avantage</h4>
+	<p>Séparer chaque fonctionnalité de l'application.</p>
+	<p>Comme chaque service ne remplit qu'une seule et unique fonction, ils sont facilement réutilisables.</p>
+	<p>On peut facilement les développer, les tester et les configurer puisqu'ils sont assez indépendants.</p>
+	<p>Cette façon de programmer est connue sous le nom <a href="http://fr.wikipedia.org/wiki/Architecture_orient%C3%A9e_services">d'architecture orientée services</a>, et n'est pas spécifique à Symfony ni au PHP.</p>
+	
+	<h4>Le conteneur de service (services container)</h4>
+	<p>Une sorte de super-objet qui gère tous les services.</p>
+	<p>Simplifie au maximum la récupération des services depuis votre code.</p>
+	<p>Si Service2 est nécessaire pour le Service1:</p>
+	<ul>
+		<li>Lorsque qu'un service a déjà été instancié une fois, le conteneur ne réinstancie pas le service à nouveau : il retourne l'instance précédemment créée ;</li>
+		<li>Lorsqu'on récupère le service1, le conteneur crée le service2 et le passe en argument du service1 (lignes 14-15).</li>
+	</ul>
+	
+	
+	<p>définir pour chaque service :</p>
+	<ul>
+		<li>Son nom, qui permettra de l'identifier au sein du conteneur ;</li>
+		<li>Sa classe, qui permettra au conteneur d'instancier le service ;</li>
+		<li>Les arguments dont il a besoin. Un argument peut être un autre service, mais aussi un paramètre (défini dans le fichier parameters.yml par exemple).</li>
+	</ul>
+	
+	<h4>Le partage de service</h4>
+	<p>Chaque service est partagé. La classe du service est instancié qu'une seule fois par le conteneur.</p>
+	<p>C'est le même objet $service1 (par exemple) qui sera utilisé dans toute votre application.</p>
+	
+	<h4>Récupérer un service</h4>
+	<pre>$mailer = $this->container->get('mailer');
+$mailer = $this->get('mailer');	// $this->get('…') est strictement équivalent à $this->container->get('…')</pre>
+	<p>Liste des services disponibles:</p>
+	<pre>php bin/console debug:container</pre>
+	
+	<h4>Créer un service simple</h4>
+	<p>Norme <a href="https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-0.md">PSR-0</a>: mettre une classe dans un namespace correspondant au dossier où est le fichier.</p>
+	<p>Par exemple, la classe OC\PlatformBundle\Antispam\OCAntispam doit se trouver dans le répertoire src/OC/PlatformBundle/Antispam/OCAntispam.php.</p>
+	<p>Exemple:</p>
+	<pre>// src/OC/PlatformBundle/Antispam/OCAntispam.php
+
+namespace OC\PlatformBundle\Antispam;
+
+class OCAntispam {
+
+  public function isSpam($text) {
+    return strlen($text) < 50;
+  }
+}</pre>
+
+	<h4>Création de la configuration du service</h4>
+	<ul>
+		<li>Il faut signaler la classe au conteneur de service</li>
+		<li>Il faut vérifier que le répertoire DependencyInjection existe avec le fichier OCPlatformExtension.php, sinon il faut le créer. <a href="{{ path('DependencyInjectionExample') }}">Exemple</a>. Il permet de charger automatiquement le fichier services.yml</li>
+		<li>Dans services.yml:
+			<pre># src/OC/PlatformBundle/Resources/config/services.yml
+services:
+    oc_platform.antispam:
+        class: OC\PlatformBundle\Antispam\OCAntispam</pre>
+        	<p>service accessible via $container->get('oc_platform.antispam');.</p>
+        </li>
+        <li>Définir un paramètre:
+        	<pre>parameters:
+    mon_parametre: ma_valeur
+
+services:
+    # ...</pre>
+    		<p>Accessible via $container->getParameter('nomParametre');.</p>
+        </li>
+	</ul>
+	
+	<h4>Utilisation du service</h4>
+	<pre>$antispam = $this->get('oc_platform.antispam');
+$text = "skjfdngv";
+if ($antispam->isSpam($text)) {
+  throw new \Exception("Votre message a été détecté comme un spam");
+}</pre>
+	<p>Application: <a href="{{ path('oc_platform_add') }}">Ajouter une annonce</a>.</p>
+	
+	<h4>Créer un service avec des arguments</h4>
+	<pre>services:
+    oc_platform.example:
+        class: OC\PlatformBundle\Example
+        arguments: ["@service_id", "plain_value", "%parameter%""]</pre>
+    <p>L'injection d'un service dans un autre s'appelle <b>l'injection de dépendances</b>.</p>
+	
+
+	<h4>En résumé</h4>
+
+	<ul>
+    	<li>Aborder plus en profondeur les notions théoriques abordées dans ce chapitre:
+        	<ul>
+        		<li><a href="https://openclassrooms.com/informatique/cours/introduction-a-l-injection-de-dependances-en-php">Introduction à l'injection de dépendances en PHP (OpenClassrooms)</a>.</li>
+        		<li><a href="https://openclassrooms.com/informatique/cours/introduction-a-l-injection-de-dependances-en-php">Les design patterns : l'injection de dépendances (OpenClassrooms)</a>.</li>
+        		<li><a href="http://fr.wikipedia.org/wiki/Architecture_orient%C3%A9e_services">Architecture orientée services (Wikipédia)</a>.</li>
+    		</ul>
+    	</li>
+    	<li>Un service est une simple classe associée à une certaine configuration.</li>
+    	<li>Le conteneur de services organise et instancie tous vos services, grâce à leur configuration.</li>
+    	<li>Les services sont la base de Symfony, et sont très utilisés par le c﻿œur même du framework.</li>
+    	<li>L'injection de dépendances est assurée par le conteneur, qui connaît les arguments dont a besoin un service pour fonctionner, et les lui donne donc à sa création.</li>
+	</ul>
+
+		
+{% endblock %}	
