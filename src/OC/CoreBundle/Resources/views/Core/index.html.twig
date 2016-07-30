@@ -1,0 +1,6 @@
+{% extends 'OCCoreBundle::layout.html.twig' %}
+
+{% block body %}
+    <h4>Dernières annonces</h4>
+    {{ render(controller("OCPlatformBundle:Advert:menu", {'limit': 3})) }}
+{% endblock %}

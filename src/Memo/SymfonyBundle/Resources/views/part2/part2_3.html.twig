@@ -146,9 +146,7 @@ class AdvertController extends Controller {
 	<p>On peut les variables de session dans le Profiler rubrique Request paragraphe « Session Attributes ».</p>
 	
 	<h4>Les messages flash</h4>
-	<pre><?php
-
-// src/OC/PlatformBundle/Controller/AdvertController.php
+	<pre>// src/OC/PlatformBundle/Controller/AdvertController.php
 
 namespace OC\PlatformBundle\Controller;
 
@@ -159,8 +157,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 class AdvertController extends Controller {
   public function addAction(Request $request) {
     $session = $request->getSession();    
-    // Bien sûr, cette méthode devra réellement ajouter l'annonce
-    // Mais faisons comme si c'était le cas
+    // Bien sûr, cette méthode devra réellement ajouter l'annonce. Mais faisons comme si c'était le cas
     $session->getFlashBag()->add('info', 'Annonce bien enregistrée');
     // Le « flashBag » est ce qui contient les messages flash dans la session
     // Il peut bien sûr contenir plusieurs messages :

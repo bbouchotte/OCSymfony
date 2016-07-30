@@ -41,8 +41,7 @@ class AdvertController extends Controller
 	
 	public function menuAction($limit)
 	{
-		// On fixe en dur une liste ici, bien entendu par la suite
-		// on la récupérera depuis la BDD !
+		// On fixe en dur une liste ici, bien entendu par la suite, on la récupérera depuis la BDD !
 		$listAdverts = array(
 				array('id' => 2, 'title' => 'Recherche développeur Symfony'),
 				array('id' => 5, 'title' => 'Mission de webmaster'),
@@ -79,7 +78,7 @@ class AdvertController extends Controller
     {
     	// test service:
     	$antispam = $this->get('oc_platform.antispam');
-    	$text = "vdffdgd";
+    	$text = "vdffdgddcsdcdsc";
     	if ($antispam->isSpam($text)) {
     		throw new \Exception("Votre message a été détecté comme un spam. " .
     				"Langue: " . $antispam->locale() . ". " .
@@ -107,9 +106,6 @@ class AdvertController extends Controller
     			'content' => 'Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…',
     			'date'    => new \Datetime()
     	);
-    	
-    	// Avec un service pour s'entrainer
-    	//$advert = $this->get('')
     	
     	return $this->render('OCPlatformBundle:Advert:edit.html.twig', array(
     			'advert' => $advert
