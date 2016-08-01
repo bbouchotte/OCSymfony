@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap3.1
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/mon-premier-hello-world-avec-symfony">
+			Chap 3.1 - La couche métier : les entités 
+		</a>
+	</h3>
+	
+	<p>Objet => Entité</p>
+	<p>Enregistrer => persister</p>
+	<p>Une entité, c'est juste un objet… mais avec des commentaires! => Annotations</p>
+	<p>Rajouter les metadata à notre objet => mapper l'objet.</p>
+	<p>Mapper : faire le lien entre notre objet et la représentation physique qu'utilise Doctrine2 (une table SQL).</p>
+	<p>
+		<a href="http://symfony.com/doc/master/book/doctrine.html">
+			Chapitre Doctrine2 de la documentation de Symfony
+		</a>.
+	</p>
+	
+	<h4>Générer une entité</h4>
+	<pre>php bin/console doctrine:generate:entity</pre>
+	
+	<h4>Affiner notre entité avec de la logique métier</h4>
+	<p>Attributs calculés (prenons l'exemple d'une entité Commande)<p>
+	<pre>class Commande {
+  public function getPrixTotal() {
+    $prix = 0;
+    foreach($this->getListeProduits() as $produit) {
+      $prix += $produit->getPrix();
+    }    
+    return $prix;
+  }
+}</pre>
+	<p>Attributs par défaut</p>
+	<pre>// src/OC/PlatformBundle/Entity/Advert.php
+
+namespace OC\PlatformBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * Advert
+ *
+ * @ORM\Table()
+ * @ORM\Entity(repositoryClass="OC\PlatformBundle\Entity\AdvertRepository")
+ */
+class Advert {
+  public function __construct() {
+    // Par défaut, la date de l'annonce est la date d'aujourd'hui
+    $this->date = new \Datetime();
+  }
+  // ...
+}</pre>
+
+	<h4>Tout sur le mapping</h4>
+	<p>
+		<a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/basic-mapping.html">
+			Documentation officielle sur le mapping.
+		</a>
+	</p>@ORM\Entity: précise le namespace complet du repository qui gère cette entité AdvertRepository.<p>
+	<pre>@ORM\Entity(repositoryClass="OC\PlatformBundle\Entity\AdvertRepository")</pre>
+	<p>@ORM\Table : annotation facultatice, permet de personnaliser le nom de la table qui sera créée dans la base de données. Attention, mettre en minuscules.</p>
+	<p>@ORM\Column(type="string") : s'applique sur un attribut de classe. string, integer, smallint, bigint, boolean, decimal, date ou datetime, time, text, object, array, float.</p>
+	<p>Autres paramètres: type, name, length, unique, nullable, precision (nombre de chiffres en tout d'un nombre à virgule. decimal), scale (nombre de chiffres après la virgule. decimal)</p>
+	
+	
+	
+	<h4>En résumé</h4>
+	<ul>
+		<li>
+    		<a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/index.html">
+    			http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/index.html
+    		</a>.
+		</li>
+		<li>Préfixer toutes les annotations par « ORM\ »</li>
+		<li>Le rôle d'un ORM est de se charger de la persistance de vos données : vous manipulez des objets, et lui s'occupe de les enregistrer en base de données.</li>
+		<li>L'ORM par défaut livré avec Symfony est Doctrine2.</li>
+		<li>L'utilisation d'un ORM implique un changement de raisonnement : on utilise des objets, et on raisonne en POO. C'est au développeur de s'adapter à Doctrine2, et non l'inverse !</li>
+		<li>Une entité est, du point de vue PHP, un simple objet. Du point de vue de Doctrine, c'est un objet complété avec des informations de mapping qui lui permettent d'enregistrer correctement l'objet en base de données.</li>
+		<li>Une entité est, du point de vue de votre code, un objet PHP qui correspond à un besoin, et indépendant du reste de votre application.</li>
+	</ul>
+
+		
+{% endblock %}	

@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+	{% block title %}
+	
+		{{ parent() }}- Part 3
+		
+	{% endblock %}
+
+	{% block body %}
+	
+		{{ parent() }}
+	
+	{% endblock %}
+	
+	{% block body_content %}	
+
+		<h3>
+			Partie 3 - Gérer la base de données avec Doctrine2
+		</h3>
+		<p>ORM : Object-Relation Mapper - « lien objet-relation »</p>
+		<ul>
+			<li>
+				<a href="{{ path('chap3_1') }}" >
+					3.1 Mon premier « Hello World ! » avec Symfony 
+				</a>	
+			</li>
+			<li>
+				<a href="{{ path('chap3_2') }}" >
+					3.2 Manipuler ses entités avec Doctrine2
+				</a>	
+			</li>
+			<li>
+				<a href="{{ path('chap3_3') }}" >
+					3.3 
+				</a>	
+			</li>
+			<li>
+				<a href="{{ path('chap3_4') }}" >
+					3.4 
+				</a>	
+			</li>
+			<li>
+				<a href="{{ path('chap3_5') }}" >
+					3.5 
+				</a>	
+			</li>
+			<li>
+				<a href="{{ path('chap3_6') }}" >
+					3.6 
+				</a>	
+			</li>
+		</ul>
+		
+
+		
+	{% endblock %}	
