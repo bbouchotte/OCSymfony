@@ -18,13 +18,112 @@
 			Chap 3.2 -  Manipuler ses entités avec Doctrine2
 		</a>
 	</h3>
+	<pre>php bin/console doctrine:database:create
+php bin/console doctrine:schema:update --dump-sql
+php bin/console doctrine:schema:update --force</pre>
+
+	<h4>Modifier une entité</h4>
+	<pre>// src/OC/PlatformBundle/Entity/Advert.php
+namespace .......
+class Advert {
+  // ... les autres attributs
+
+  /**
+   * @ORM\Column(name="published", type="boolean")
+   */
+  private $published = true;
+}</pre>
+	<pre>php bin/console doctrine:generate:entities OCPlatformBundle:Advert</pre>
+	<p> (Génère les getters et setters)</p>
+	<pre>php bin/console doctrine:schema:update --dump-sql</pre>
+	<pre>php bin/console doctrine:schema:update --force</pre>
 	
-		
+	
+	<h4>Enregistrer ses entités avec l'EntityManager</h4>
+	<p>Le service Doctrine gère la persistance de nos objets. Il est accessible depuis le contrôleur comme n'importe quel service :</p>
+	<pre>$doctrine = $this->get('doctrine');</pre>
+	<p>L﻿﻿a classe Controller de Symfony intègre un raccourci. Il fait exactement la même chose, mais est plus joli et permet l'autocomplétion :</p>
+	<pre>$doctrine = $this->getDoctrine();</pre>
+	<p>C'est donc ce service Doctrine qui gère la base de données. Il s'occupe de deux choses :</p>
+	<ul>
+		<li>Les différentes connexions, Doctrine dispose, entre autres, de la méthode $doctrine->getConnection($name).</li>
+		<li>Les différents gestionnaires d'entités, ou EntityManager. $doctrine->getManager($name) récupère un ORM à partir de son nom.</li>
+	</ul>
+	
+	<h4>Le service EntityManager</h4>
+	<pre>$em = $this->getDoctrine()->getManager();
+// ou $em = $this->get('doctrine.orm.entity_manager');</pre>
+	<p>L'EntityManager permet de persister les données, exécuter les requêtes SQL, ...</p>
+	<p>Il ne sait pas récupérer facilement les entités depuis la BDD. Les Repository facilitent l'accés au objets.</p>
+	
+	<h4>Les Repository</h4>
+	<p>Objets, qui utilisent un EntityManager en coulisses.</p>
+	<p>Permettenent d'accéder aux entités.</p>
+	<p>Accéder aux Repository:</p>
+	<pre>$em = $this->getDoctrine()->getManager();
+$advertRepository = $em->getRepository('OCPlatformBundle:Advert'); // Fonctionne partout dans Doctrine.
+∕∕ ou
+$advertRepository = $em->getRepository('OC\PlatformBundle\Entity\Advert);</pre>
+	
+	<h4>Enregistrer ses entités en base de données</h4>
+	<pre>    	$advert = new Advert();
+	$advert->setTite().......
+	$em = $this->getDoctrine()->getManager();
+	$em->persist($advert);
+	$em->flush(); //On peut maintenant utiliser $advert->getId()</pre>
+	<p>Doctrine utilise les transactions, le flush enregistre toutes les entités depuis le dernier flush, ça peut éviter des erreurs.</p>
+	<p>La méthode $em->persist() traite indifféremment les nouvelles entités de celles déjà en base de données.</p>
+	
+	<h4>Les autres méthodes</h4>
+	<p>
+		<a href="http://www.doctrine-project.org/api/orm/2.5/class-Doctrine.ORM.EntityManager.html">
+			Documentation officielle
+		</a>
+	</p>
+	<p><b>$em->detach($advert)</b> annule le persist() effectué sur l'entité en argument.</p>
+	<p><b>clear($nomEntite)</b> annule tous les persist() effectués.</p>
+	<p><b>clear()</b> sans arguments revient à faire un detach() sur tous les entités d'un coup.</p>
+	<p><b>contains($entite)</b> retourne true si l'entité donnée en argument est gérée par l'EntityManager (s'il y a eu un persist() sur l'entité donc).</p>
+	<p><b>refresh($entite)</b> met à jour l'entité donnée en argument dans l'état où elle est en base de données. Cela écrase et donc annule tous les changements qu'il a pu y avoir sur l'entité concernée.</p>
+	<p><b>remove($entite)</b> supprime l'entité donnée en argument de la base de données. Effectif au prochain flush().</p>
+	
+	<h4>Récupérer ses entités avec un Repository</h4>
+	<pre>namespace OC\PlatformBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+class AdvertController extends Controller {
+  public function viewAction($id) {
+    $repository = $this->getDoctrine()
+      ->getManager()
+      ->getRepository('OCPlatformBundle:Advert')
+    ;
+
+    $advert = $repository->find($id);
+
+    // $advert est donc une instance de OC\PlatformBundle\Entity\Advert
+    // ou null si l'id $id  n'existe pas, d'où ce if :
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+
+    // Le render ne change pas, on passait avant un tableau, maintenant un objet
+    return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
+      'advert' => $advert
+    ));
+  }
+}</pre>
+	<p>Méthode find de l'EntityManager, et non du Repository :</p>
+	<pre>$advert = $this->getDoctrine()
+  ->getManager()
+  ->find('OCPlatformBundle:Advert', $id)
+;</pre>
 	
 	<h4>En résumé</h4>
 	<ul>
-
+		<li>Il faut exécuter la commande doctrine:schema:update pour mettre à jour la base de données et la faire correspondre à l'état actuel de vos entités.</li>
+		<li>Avec Symfony, on récupère l'EntityManager de Doctrine2 via le service doctrine.orm.entity_manager ou, plus simplement depuis un contrôleur, via $this->getDoctrine()->getManager() .</li>
+		<li>L'EntityManager sert à manipuler les entités, tandis que les repositories servent à récupérer les entités.</li>
 	</ul>
-
-		
-{% endblock %}	
+{% endblock %}

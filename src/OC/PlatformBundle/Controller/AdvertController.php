@@ -7,6 +7,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
+use OC\PlatformBundle\Entity\Advert;
+
 class AdvertController extends Controller
 
 {
@@ -56,18 +58,17 @@ class AdvertController extends Controller
 	}
     
     public function viewAction($id)
-    {    
-    	$advert = array(
-    			'title'   => 'Recherche développpeur Symfony2',
-    			'id'      => $id,
-    			'author'  => 'Alexandre',
-    			'content' => 'Nous recherchons un développeur Symfony2 débutant sur Lyon. Blabla…',
-    			'date'    => new \Datetime()
-    	);
+    {
+    	/*	// Test service:
+    	 $serviceTest = $this->get('oc_platform.test');
+    	 $advert = $serviceTest->get();*/
     	
-    	// Test service:
-    	$serviceTest = $this->get('oc_platform.test');
-    	$advert = $serviceTest->get();
+    	$repository = $this->getDoctrine()->getManager()->getRepository('OCPlatformBundle:Advert');
+    	$advert = $repository->find($id);
+    	
+    	if (null === $advert) {
+    		throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    	}
     	
     	return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
     			'advert' => $advert
@@ -76,6 +77,7 @@ class AdvertController extends Controller
 
     public function addAction(Request $request)
     {
+    	
     	// test service:
     	$antispam = $this->get('oc_platform.antispam');
     	$text = "vdffdgddcsdcdsc";
@@ -84,11 +86,21 @@ class AdvertController extends Controller
     				"Langue: " . $antispam->locale() . ". " .
     				"Longueur minimum: " . $antispam->minLenght() 
    				);
-    	}    	
+    	}    
+    	
+    	$advert = new Advert();
+    	$advert->setTitle('Recherche développeur Symfony.');
+    	$advert->setAuthor('Alexandre');
+    	$advert->setText("Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…");
+    	
+    	$em = $this->getDoctrine()->getManager();
+    	$em->persist($advert);
+    	$em->flush();
+    	
     	
     	if ($request->isMethod('POST')) {
     		$session->getFlashBag()->add('notice', 'Annonce bien enregistrée.');
-       		return $this->redirectToRoute('oc_platform_view', array( 'id' => 5));
+       		return $this->redirectToRoute('oc_platform_view', array( 'id' => $advert->getId()));
     	}
     	return $this->render('OCPlatformBundle:Advert:add.html.twig');
 	}
