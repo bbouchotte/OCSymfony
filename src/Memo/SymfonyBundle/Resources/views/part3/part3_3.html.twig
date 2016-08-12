@@ -18,11 +18,250 @@
 			Chap 3.3 -  Les relations entre entités avec Doctrine2
 		</a>
 	</h3>
+	<p>Les différents types de relations: OneToOne, OneToMany et ManyToMany.</p>
 	
+	<h4>Notion de propriétaire et d'inverse</h4>
+	<p>L'entité propriétaire est celle qui contient la référence à l'autre entité.</p>
+	<p>Par exemple, pour les tables advert et comment, comment est propriétaire de la relation.</p>
 	
+	<h4>Notion d'unidirectionnalité et de bidirectionnalité</h4>
+	<p>Dans le cas d'une relation unidirectionnelle, on pourra ecrire $comment->getAdvert() <b>mais pas</b> $advert->getComments().<p>
+	<p>$entiteProprietaire->getEntiteInverse() <b>mais pas</b> entiteInverse->getEntiteProprietaire().</p>
+	<p>Doctrine utilise le Lazy Loading, « chargement fainéant », il ne charge les entités à l'autre bout de la relation que si vous voulez réellement accéder à ces entités donc uniquement au moment où vous faites $advert->getComments(), Doctrine charge les commentaires (avec une nouvelle requête SQL donc).</p>
+	
+	<h4>Relation One-To-One</h4>
+	<p>Exemple avec une entité image(url, alt).</p>
+	<p>Entité propriétaire:</p>
+	<pre>/**
+ * @ORM\Entity
+ */
+class Advert {
+  /**
+   * @ORM\OneToOne(targetEntity="OC\PlatformBundle\Entity\Image", cascade={"persist"})
+   */
+  private $image;
+  // …</pre>
+  <p>Entité inverse (image): pas besoin d'ajout.</p>
+  <p>L'annotation @ORM\OneToOne</p>
+  <ul>
+  	<li>est incompatible avec l'annotation @ORM\Column.</li>
+  	<li>possède au moins l'option targetEntity, namespace complet vers l'entité liée.</li>
+  	<li>possède d'autres options facultatives, dont l'option cascade.</li>
+  </ul>
+  <p>Ne pas oublier de mettre à jour la base de données, doctrine:schema:update!</p>
+  <p>Rendre une relation non-facultative:</p>
+  <pre>/**
+  * @ORM\OneToOne(targetEntity="OC\PlatformBundle\Entity\Image", cascade={"persist"})
+  * @ORM\JoinColumn(nullable=false)
+  */
+private $image;</pre>
+
+	<h4>Les opérations de cascade</h4>
+	<p>cascade={"persist"} : un persist() sur Advert doit se « propager » sur l'Image liée.</p>
+	<p>Peut être remove.</p>
+	
+	<h4>Getter et setter</h4>
+	<pre>php bin/console generate:doctrine:entities</pre>
+	<p>Pour récupérer l'url de l'image:</p>
+	<pre>$url = $advert->getImage()->getUrl();</pre>
+	
+	<h4>Relation Many-To-One</h4>
+	<pre>
+/**
+ * @ORM\Entity
+ */
+class Application {
+  /**
+   * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert")
+   * @ORM\JoinColumn(nullable=false)
+   */
+  private $advert;
+  // …
+}</pre>
+	<p>JoinColumn(nullable=false) => pas de candidature non affectée à une annonce.</p>
+	<pre>doctrine:schema:update</pre>
+	<p>Getter et setter</p>
+	<pre>php bin/console doctrine:generate:entities OCPlatformBundle:Application</pre>
+	<p>Dans addAction():</p>
+	<pre>$application1 = new Application();
+    $application1->setAuthor('Marine');
+    $application1->setContent("J'ai toutes les qualités requises.");
+
+    $application2 = new Application();
+    $application2->setAuthor('Pierre');
+    $application2->setContent("Je suis très motivé.");
+
+    $application1->setAdvert($advert);
+    $application2->setAdvert($advert);
+
+    $em = $this->getDoctrine()->getManager();
+
+    $em->persist($advert);
+
+    // Étape 1 ter : pour cette relation pas de cascade lorsqu'on persiste Advert, car la relation est
+    // définie dans l'entité Application et non Advert. On doit donc tout persister à la main ici.
+    $em->persist($application1);
+    $em->persist($application2);</pre>
+    <p>Dans viewAction():</p>
+    <pre>$em = $this->getDoctrine()->getManager();
+    $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
+
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+    
+    $listApplications = $em
+      ->getRepository('OCPlatformBundle:Application')
+      ->findBy(array('advert' => $advert))
+    ;
+
+    return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
+      'advert'           => $advert,
+      'listApplications' => $listApplications
+    ));</pre>
+    
+    <h4>Relation Many-To-Many</h4>
+    <pre><...
+class Advert {
+  /**
+   * @ORM\ManyToMany(targetEntity="OC\PlatformBundle\Entity\Category", cascade={"persist"})
+   */
+  private $categories;
+  // …</pre>
+  <p>Il faut définir l'attribut comme ArrayCollection dans le constructeur.</p>
+  <p>Personnaliser un nom de table.</p>
+  <pre>/**
+ * @ORM\ManyToMany(targetEntity="OC\PlatformBundle\Entity\Category", cascade={"persist"})
+ * @ORM\JoinTable(name="oc_advert_category")
+ */
+private $categories;</pre>
+	<pre>php bin/console doctrine:schema:update</pre>
+	
+	<h4>Remplissons la base de données avec les fixtures</h4>
+	<p>Voir fichier src/OC/PlatformBundle/DataFixtures/ORM/LoadCategory.php (Dossier ODM pour les documents).</p>
+	<pre>php bin/console doctrine:fixtures:load</pre>
+	<p>Ajouter des fixtures en plus des données présentes:</p> 
+	<pre>php bin/console doctrine:fixtures:load --append</pre>
+	
+	<h4>Exemple d'utilisation</h4>
+	<pre>namespace OC\PlatformBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+class AdvertController extends Controller {
+  // …
+
+  public function editAction($id, Request $request)   {
+    $em = $this->getDoctrine()->getManager();
+    $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
+
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+    $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();
+    foreach ($listCategories as $category) {
+      $advert->addCategory($category);
+    }
+
+    // Pour persister le changement dans la relation, il faut persister l'entité propriétaire
+    // Ici, Advert est le propriétaire, donc inutile de la persister car on l'a récupérée depuis Doctrine
+    $em->flush();
+
+    // … reste de la méthode
+  }
+}</pre>
+
+	<h4>Relation Many-To-Many avec attributs</h4>
+	<pre>namespace OC\PlatformBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="oc_advert_skill")
+ */
+class AdvertSkill {
+
+  /**
+   * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert")
+   * @ORM\JoinColumn(nullable=false)
+   */
+  private $advert;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Skill")
+   * @ORM\JoinColumn(nullable=false)
+   */
+  private $skill;
+  
+  // ...
+}</pre>
+
+	<h4>Les relations bidirectionnelles</h4>
+	<p>
+		Doc officielle sur la 
+		<a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/association-mapping.html">
+			création des relations
+		</a>
+		 et 
+		<a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/working-with-associations.html">
+			utilisation
+		</a>
+		.
+	</p>
+	<pre>/**
+ * @ORM\Entity
+ */
+class Advert {
+  /**
+   * @ORM\OneToMany(targetEntity="OC\PlatformBundle\Entity\Application", mappedBy="advert")
+   */
+  private $applications; // Notez le « s », une annonce est liée à plusieurs candidatures
+    // …
+}</pre>
+	<p>ManyToOne => propriétaire - OneToMany => inverse.</p>
+	<pre>namespace OC\PlatformBundle\Entity;
+
+/**
+ * @ORM\Entity
+ */
+class Application {
+  /**
+   * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert", inversedBy="applications")
+   * @ORM\JoinColumn(nullable=false)
+   */
+  private $advert;
+  // …
+}</pre>
+	<p>Il faut faire un $application->setAdvert() lors du $advert->addApplication()</p>
+	<pre>namespace OC\PlatformBundle\Entity;
+
+/**
+ * @ORM\Entity
+ */
+class Advert {
+  // …
+
+  public function addApplication(Application $application) {
+    $this->applications[] = $application;
+    $application->setAdvert($this);	// On lie l'annonce à la candidature
+    return $this;
+  }
+
+  public function removeApplication(Application $application) {
+    $this->applications->removeElement($application);
+    // $application->setAdvert(null); // si notre relation était facultative (nullable=true)
+  }
+  // …
+}</pre>
+    	
 	<h4>En résumé</h4>
 	<ul>
+		<li>Les relations Doctrine révèlent toute la puissance de l'ORM.</li>
+		<li>Dans une relation entre deux entités, l'une est propriétaire de la relation et l'autre est inverse. Cette notion est purement technique.</li>
+		<li>Une relation est dite unidirectionnelle si l'entité inverse n'a pas d'attribut la liant à l'entité propriétaire. On met en place une relation bidirectionnelle lorsqu'on a besoin de cet attribut dans l'entité inverse (ce qui arrivera pour certains formulaires, etc.).</li>
 	</ul>
 		
 {% endblock %}
-	
