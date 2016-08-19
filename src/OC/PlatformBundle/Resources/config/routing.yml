@@ -33,6 +33,18 @@ oc_platform_delete:
     requirements:
         id: \d+
         
+oc_platform_gawc:
+    path:     /gawc
+    defaults:
+        _controller: OCPlatformBundle:Advert:getAdvertWithCategories
+        
+oc_platform_gawa:
+    path:     /gawa/{limit}
+    defaults:
+        _controller: OCPlatformBundle:Advert:getApplicationsWithAdvert
+        limit:       3
+    requirements:
+        limit: \d+
 
 
 

@@ -16,10 +16,10 @@
     		<h3>{{ advert.title }}</h3>
     	</div>
     	<div class="col-xs-12">
-			<i>Par {{ advert.author }}, le {{ advert.date|date('d/m/Y') }}</i>
+			<i><b>Par {{ advert.author }}, le {{ advert.date|date('d/m/Y') }}</b></i>
 			<br />
 			<i>
-				Catégories:
+				<h4>Catégories:</h4>
 			    {% if not advert.categories.empty %}
     				{% for category in advert.categories %}
     					 {{ category.name }}{% if not loop.last %}, {% else %}.{% endif %}
@@ -28,7 +28,7 @@
 			</i>
 			<br />
 			<i>
-				Compétences:<br>
+				<h4>Compétences:</h4>
 				{% if advertSkills is not null  %}
 					{% for advertSkill in advertSkills %}
 						{{ advertSkill.skill.name }} : {{ advertSkill.level }}<br>
@@ -40,7 +40,7 @@
             </div>
         </div>
     	<div class="col-xs-12">
-    		<p>Liste des candidatures:</p>
+    		<h4>Liste des candidatures:</h4>
     		{% if applications is not null %}
     			{% for application in applications %}
     				<p><b>{{ application.author }}</b> : {{ application.content }}</p>
@@ -48,6 +48,8 @@
     		{% endif %}
     	</div>
 	</div>
+	
+	<hr>
 
 
   <p>

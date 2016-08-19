@@ -1,0 +1,25 @@
+{% extends "OCPlatformBundle::layout.html.twig" %}
+
+{% block title %}
+  Dernières candidatures - {{ parent() }}
+{% endblock %}
+
+{% block ocplatform_body %}
+
+	<h4>Dernières candidatures</h4>
+	{% if applications is not empty %}
+		{% for application in applications %}
+			<div class="well">
+				<p>De: {{ application.author }} le {{ application.date|date('d/m/Y') }}.</p>
+				<p>{{ application.content }}</p>
+				<p>
+					<a href="{{ path('oc_platform_view', {'id': application.advert.id}) }}">
+						{{ application.advert.title }}
+					</a>
+				</p>
+				
+			</div>
+		{% endfor %}
+	{% endif %}
+
+{% endblock %}

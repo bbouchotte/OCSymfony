@@ -58,7 +58,7 @@ class AdvertController extends Controller
 		
 		$listAdverts = [];
 		$em = $this->getDoctrine()->getManager();
-		$listAdverts = $em->getRepository('OCPlatformBundle:Advert')->findAll();
+		$listAdverts = $em->getRepository('OCPlatformBundle:Advert')->myFindAll();
 		
 	
 		return $this->render('OCPlatformBundle:Advert:menu.html.twig', array(
@@ -77,7 +77,8 @@ class AdvertController extends Controller
     	$em = $this->getDoctrine()->getManager();
     	
     	$repository = $em->getRepository('OCPlatformBundle:Advert');
-    	$advert = $repository->find($id);
+//     	$advert = $repository->find($id);
+		$advert = $repository->myFindDQL($id);
     	
     	if (null === $advert) {
     		throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
@@ -233,6 +234,23 @@ class AdvertController extends Controller
     	$response->setContent("Ceci est une page d'erreur 404");	// On définit le contenu
     	$response->setStatusCode(Response::HTTP_NOT_FOUND);	// On définit le code HTTP à « Not Found » (erreur 404)
     	return $response;
+    }
+    
+    public function getAdvertWithCategoriesAction() {
+    	$repository = $this->getDoctrine()->getRepository('OCPlatformBundle:Advert');
+    	$listAdverts = $repository->getAdvertWithCategories(array('Développeur', 'Intégrateur'));
+    	
+    	return $this->render('OCPlatformBundle:Advert:index.html.twig', array(
+    			'listAdverts' => $listAdverts
+    	));
+    }
+    
+    public function getApplicationsWithAdvertAction($limit){
+    	$repository = $this->getDoctrine()->getRepository('OCPlatformBundle:Application');
+    	$applications = $repository->getApplicationsWithAdvert($limit);
+    	return $this->render('OCPlatformBundle:Advert:gawa.html.twig', array(
+    			'applications' => $applications
+    	));
     }
 
 }

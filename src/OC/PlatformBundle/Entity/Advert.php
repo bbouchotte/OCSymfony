@@ -28,6 +28,11 @@ class Advert
 	 */
 	private $applications;
 	
+	/**
+	 * @ORM\OneToMany(targetEntity="OC\PlatformBundle\Entity\AdvertSkill", mappedBy="advert", cascade={"remove"})
+	 */
+	private $advertSkill;
+	
     /**
      * @var int
      *
@@ -301,6 +306,38 @@ class Advert
     {
         return $this->applications;
     }
+
+    /**
+     * Add advertSkill
+     *
+     * @param \OC\PlatformBundle\Entity\AdvertSkill $advertSkill
+     *
+     * @return Advert
+     */
+    public function addAdvertSkill(\OC\PlatformBundle\Entity\AdvertSkill $advertSkill)
+    {
+        $this->advertSkill[] = $advertSkill;
+
+        return $this;
+    }
+
+    /**
+     * Remove advertSkill
+     *
+     * @param \OC\PlatformBundle\Entity\AdvertSkill $advertSkill
+     */
+    public function removeAdvertSkill(\OC\PlatformBundle\Entity\AdvertSkill $advertSkill)
+    {
+        $this->advertSkill->removeElement($advertSkill);
+    }
+
+    /**
+     * Get advertSkill
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAdvertSkill()
+    {
+        return $this->advertSkill;
+    }
 }
-
-
