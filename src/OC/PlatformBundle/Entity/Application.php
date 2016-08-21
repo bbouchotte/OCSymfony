@@ -9,9 +9,25 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * @ORM\Table(name="application")
  * @ORM\Entity(repositoryClass="OC\PlatformBundle\Repository\ApplicationRepository")
+ * @ORM\HasLifecycleCallbacks()
  */
 class Application
 {
+	
+	/**
+	 * @ORM\PrePersist
+	 */
+	public function increaseNbApplications() {
+		$this->advert->increaseNbApplications();
+	}
+	
+	/**
+	 * @ORM\PreRemove
+	 */
+	public function decreaseNbApplications() {
+		$this->advert->decreaseNbApplications();
+	}
+	
 	/**
 	 * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert", inversedBy="applications")
 	 * @ORM\JoinColumn(nullable=false)

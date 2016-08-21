@@ -179,8 +179,10 @@ class AdvertController extends Controller
     	$categories = $em->getRepository('OCPlatformBundle:Category')->findAll();
     	
     	foreach ($categories as $category) {
-    		$advert->addCategory($category);
+    		
     	}
+    	
+    	$advert->setText("Nous recherchons un développeur Symfony débutant sur Paris. Blabla…");
     	
     	$em->flush(); // inutile de persister $advert
     	

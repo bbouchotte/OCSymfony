@@ -16,7 +16,10 @@
     		<h3>{{ advert.title }}</h3>
     	</div>
     	<div class="col-xs-12">
-			<i><b>Par {{ advert.author }}, le {{ advert.date|date('d/m/Y') }}</b></i>
+			<i><b>Par {{ advert.author }}, le {{ advert.date|date('d/m/Y') }}</b>.</i>
+			{% if advert.updatedAt is not null %}
+				<i>Mise à jour le {{ advert.updatedAt|date('d/m/Y') }}</i>
+			{% endif %}
 			<br />
 			<i>
 				<h4>Catégories:</h4>
@@ -40,12 +43,20 @@
             </div>
         </div>
     	<div class="col-xs-12">
-    		<h4>Liste des candidatures:</h4>
+    		<h4>
+    		    {% if advert.nbApplications is not null %}
+    				{{ advert.nbApplications }}
+    			{% endif %}
+    		 	candidatures:
+    		 </h4>
     		{% if applications is not null %}
     			{% for application in applications %}
-    				<p><b>{{ application.author }}</b> : {{ application.content }}</p>
+    				<p class="well"><b>{{ application.author }}</b> : {{ application.content }}</p>
     			{% endfor %}
     		{% endif %}
+    	</div>
+    	<div class="col-xs-12">
+    		<p><i>Slug: {{ advert.slug }}</i></p>
     	</div>
 	</div>
 	

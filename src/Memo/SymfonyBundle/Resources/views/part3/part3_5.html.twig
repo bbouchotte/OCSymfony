@@ -1,0 +1,235 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap3.5
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/les-evenements-et-extensions-doctrine-1">
+			Chap 3.5 -   Les évènements et extensions Doctrine 
+		</a>
+	</h3>
+	
+	<h4>Les événements Doctrine</h4>
+	<p>Appelés <i>lifecycle</i> - callbacks du cycle de vie</p>
+	<p>Il faut définir l'entité comme contenant des callbacks puis définir un callback et ses évènements associés:</p>
+	<pre>namespace OC\PlatformBundle\Entity;
+
+/**
+ * @ORM\Entity(repositoryClass="OC\PlatformBundle\Entity\AdvertRepository")
+ * @ORM\HasLifecycleCallbacks()
+ */
+class Advert {
+  /**
+   * @ORM\PreUpdate
+   */
+  public function updateDate() {
+    $this->setUpdatedAt(new \Datetime());
+  }
+}</pre> 
+
+	<h4>Liste des évènements de cycle de vie</h4>
+	<ul>
+		<li><b>PrePersist</b>: avant un $em->persist($entity), pas d'accés à l'id.</li>
+		<li><b>PostPersist</b>: après le $em->flush(). Pas de persistance.</li>
+		<li><b>PreUpdate</b>: avant le flush(). Il faut qu'il au moins un attribut modifié.</li>
+		<li><b>PostUpdate</b>: Pas de persistance.</li>
+		<li><b>PreRemove</b>.</li>
+		<li><b>PostRemove</b>: Pour supprimer un fichier associé par exemple.</li>
+		<li><b>PostLoad</b>: après que l'EntityManager a chargé une entité (ou après un $em->refresh()).</li>
+	</ul>
+	<p>Attention, ces évènements se produisent lorsque vous créez et modifiez vos entités en manipulant les objets. Ils ne sont pas déclenchés lorsque vous effectuez des requêtes DQL ou avec le QueryBuilder.</p>
+	
+	<h4>Utiliser des services pour écouter les évènements Doctrine</h4>
+	<p>Par exemple, pour envoyer un mail à chaque création d'une annonce, impossible d'utiliser le service mailer depuis une entité.</p>
+	<p>Les services seront exécutés pour un évènement concernant toutes nos entités.</p>
+	
+	<h4>Exemple: compteur de candidatures</h4>
+	<pre>// src/OC/PlatformBundle/Entity/Advert.php
+namespace OC\PlatformBundle\Entity;
+class Advert {
+  /**
+   * @ORM\Column(name="nb_applications", type="integer")
+   */
+  private $nbApplications = 0;
+
+  public function increaseApplication() {
+    $this->nbApplications++;
+  }
+
+  public function decreaseApplication() {
+    $this->nbApplications--;
+  }
+  // ...
+}</pre>
+	<pre>// src/OC/PlatformBundle/Entity/Application.php
+namespace OC\PlatformBundle\Entity;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Table(name="oc_application")
+ * @ORM\Entity(repositoryClass="OC\PlatformBundle\Entity\ApplicationRepository")
+ * @ORM\HasLifecycleCallbacks()
+ */
+class Application {
+  /**
+   * @ORM\PrePersist
+   */
+  public function increase() {
+    $this->getAdvert()->increaseApplication();
+  }
+
+  /**
+   * @ORM\PreRemove
+   */
+  public function decrease() {
+    $this->getAdvert()->decreaseApplication();
+  }
+  // ...
+}</pre>
+
+	<h4>Utiliser des services pour écouter les évènements Doctrine</h4>
+	<p>Les callbacks n'ont accès à aucune information de l'extérieur. Il n'est pas possible d'utiliser un service depuis entité.</p>
+	<pre>// src/OC/PlatformBundle/Email/ApplicationMailer.php
+namespace OC\PlatformBundle\Email;
+
+use OC\PlatformBundle\Entity\Application;
+
+class ApplicationMailer {
+  /**
+   * @var \Swift_Mailer
+   */
+  private $mailer;
+
+  public function __construct(\Swift_Mailer $mailer) {
+    $this->mailer = $mailer;
+  }
+
+  public function sendNewNotification(Application $application) {
+    $message = new \Swift_Message(
+      'Nouvelle candidature',
+      'Vous avez reçu une nouvelle candidature.'
+    );
+
+    $message
+      ->addTo($application->getAdvert()->getAuthor()) // Ici bien sûr il faudrait un attribut "email", j'utilise "author" à la place
+      ->addFrom('admin@votresite.com')
+    ;
+    $this->mailer->send($message);
+  }
+}</pre>
+	<pre># src/OC/PlatformBundle/Resources/config/services.yml
+services:
+  oc_platform.email.application_mailer:
+      class: OC\PlatformBundle\Email\ApplicationMailer
+      arguments:
+          - "@mailer"
+	</pre>
+	<p>Le service callback, celui qui sera appelé par Doctrine lorsque les évènements configurés seront déclenchés.</p>
+	<pre>// src/OC/PlatformBundle/DoctrineListener/ApplicationCreationListener.php
+namespace OC\PlatformBundle\DoctrineListener;
+
+use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
+use OC\PlatformBundle\Email\ApplicationMailer;
+use OC\PlatformBundle\Entity\Application;
+
+class ApplicationCreationListener {
+  /**
+   * @var ApplicationMailer
+   */
+  private $applicationMailer;
+
+  public function __construct(ApplicationMailer $applicationMailer) {
+    $this->applicationMailer = $applicationMailer;
+  }
+
+  public function postPersist(LifecycleEventArgs $args) {
+    $entity = $args->getObject();
+    if (!$entity instanceof Application) {
+      return;
+    }
+    $this->applicationMailer->sendNewNotification($entity);
+  }
+}</pre>
+	<p>L'objet LifecycleEventArgs offre deux méthodes: <b>getObjet()</b> retourne l'entité et <b>getObjectManager</b> retourne l'EntityManager pour persister ou supprimer.</p>
+	<pre># src/OC/PlatformBundle/Resources/config/services.yml
+services:
+  oc_platform.doctrine_listener.application_creation:
+    class: OC\PlatformBundle\DoctrineListener\ApplicationCreationListener
+    arguments:
+      - "@oc_platform.email.application_mailer"
+    tags:
+      - { name: doctrine.event_listener, event: postPersist }</pre>
+	
+	<h4>Les extensions Doctrine</h4>
+	<p>Installer le StofDoctrineExtensionBundle et générer des slugs.</p>
+	<pre>// composer.json
+"require": {
+  "stof/doctrine-extensions-bundle": "^1.2.2"
+}</pre>
+	<pre>// app/AppKernel.php
+public function registerBundles() {
+    // …
+    new Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle(),
+    // …
+  );
+}</pre>
+	<pre>php ../composer.phar update</pre>
+	<pre># app/config/config.yml
+# Stof\DoctrineExtensionsBundle configuration
+stof_doctrine_extensions:
+    orm:
+        default:
+            sluggable: true</pre>
+	<p>Cela va activer l'extension Sluggable qui s'utilise avec l'annotation Slug:</p>
+	<pre>// src/OC/PlatformBundle/Entity/Advert.php
+namespace OC\PlatformBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo; // N'oubliez pas ce use
+
+/**
+ * @ORM\Entity
+ */
+class Advert {
+  /**
+   * @Gedmo\Slug(fields={"title"})
+   * @ORM\Column(name="slug", type="string", length=255, unique=true)
+   */
+  private $slug;
+}</pre>
+	<p>L'option fields permet de définir le ou les attributs à partir desquels le slug sera généré.</p>
+	
+	<h4>Les autres extensions</h4>
+	<ul>
+		<li>Tree: automatise la gestion des arbres et ajoute des méthodes spécifiques au repository. Les arbres sont une représentation d'entités avec des liens type parents-enfants, utiles pour les catégories d'un forum par exemple.</li>
+		<li>Translatable: offre une solution aisée pour traduire des attributs spécifiques de vos entités dans différents langages. De plus, elle charge automatiquement les traductions pour la locale courante.</li>
+		<li>Sluggable: permet de générer automatiquement un slug à partir d'attributs spécifiés.</li>
+		<li>Timestampable: automatise la mise à jour d'attributs de type date dans vos entités. Vous pouvez définir la mise à jour d'un attribut à la création et/ou à la modification, ou même à la modification d'un attribut particulier. Vous l'aurez compris, cette extension fait exactement la même chose que ce qu'on a fait dans le paragraphe précédent sur les évènements Doctrine (mise à jour de la date à chaque modification), et en mieux !</li>
+		<li>Blameable: permet d'assigner l'utilisateur courant (l'entité elle-même, ou alors juste le nom d'utilisateur) dans un attribut d'une autre entité. Utile pour notre entité Advert par exemple, laquelle pourrait être reliée à un utilisateur.</li>
+		<li>Loggable: permet de conserver les différentes versions de vos entités, et offre des outils de gestion des versions.</li>
+		<li>Sortable: permet de gérer des entités ordonnées, c'est-à-dire avec un ordre précis.</li>
+		<li>Softdeleteable: SoftDeleteable permet de « soft-supprimer » des entités, c'est-à-dire de ne pas les supprimer réellement, juste mettre un de leurs attributs à true pour les différencier. L'extension permet également de les filtrer lors des SELECT, pour ne pas utiliser des entités « soft-supprimées ».</li>
+		<li>Uploadable: offre des outils pour gérer l'enregistrement de fichiers associés avec des entités. Elle inclut la gestion automatique des déplacements et des suppressions des fichiers.</li>
+		<li>IpTraceable: permet d'assigner l'ip de l'utilisateur courant à un attribut.</li>
+	</ul>
+  	
+	<h4>En résumé</h4>
+	<ul>
+		<li>Les évènements permettent de centraliser du code répétitif, afin de systématiser leur exécution et de réduire la duplication de code.</li>
+		<li>Plusieurs évènements jalonnent la vie d'une entité, afin de pouvoir exécuter une fonction aux endroits désirés.</li>
+		<li>Les extensions permettent de reproduire des comportements communs dans une application, afin d'éviter de réinventer la roue.</li>
+	</ul>	
+	
+{% endblock %}
+	
+	

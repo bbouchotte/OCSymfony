@@ -13,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 class AdvertSkill
 {
 	/**
-	 * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert")
+	 * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert", inversedBy="advertSkill")
 	 * @ORM\JoinColumn(nullable=false)
 	 */
 	private $advert;
