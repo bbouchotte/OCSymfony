@@ -3,5 +3,88 @@
 {# On laisse vide la vue pour l'instant, on la comblera plus tard
    lorsqu'on saura afficher un formulaire. #}
 <div class="well">
-  Ici se trouvera le formulaire.
+  {{ form_start(form, {'attr': {'class': 'form-horizontal text-center'}}) }}
+
+  {# Les erreurs générales du formulaire. #}
+  {{ form_errors(form) }}
+
+	{% if form.date is defined %}
+        {# Génération du label + error + widget pour un champ. #}
+        {{ form_row(form.date) }}
+	{% else %}
+		{{ advert.date|date('d/m/Y') }}
+	{% endif %}
+
+  {# Génération manuelle et éclatée : #}
+  <div class="form-group">
+    {# Génération du label. #}
+    {{ form_label(form.title, "Titre de l'annonce", {'label_attr': {'class': 'col-sm-2 control-label'}}) }}
+
+    {# Affichage des erreurs pour ce champ précis. #}
+    {{ form_errors(form.title) }}
+
+    <div class="col-sm-10">
+      {# Génération de l'input. #}
+      {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+    </div>
+  </div>
+
+  {# Idem pour un autre champ. #}
+  <div class="form-group">
+    {{ form_label(form.text, "Contenu de l'annonce", {'label_attr': {'class': 'col-sm-2 control-label'}}) }}
+    {{ form_errors(form.title) }}
+    <div class="col-sm-10">
+      {{ form_widget(form.text, {'attr': {'class': 'form-control'}}) }}
+    </div>
+  </div>
+
+  {{ form_row(form.author) }}
+  {% if form.published is defined %}
+  	{{ form_row(form.published) }}
+  {% endif %}
+  
+	<h4>Image</h4>
+  	<div class="form-group">
+  	{#
+        {{ form_label(form.image.url, "URL de l'image", {'label_attr': {'class': 'col-sm-2 control-label'}}) }}
+        {{ form_errors(form.image.url) }}
+    	<div class="col-sm-10">
+            {{ form_widget(form.image.url, {'attr': {'class': 'form-control'}}) }}
+    	</div>
+	</div>
+	
+  	<div class="form-group">
+        {{ form_label(form.image.alt, "Nom de l'image (alt)", {'label_attr': {'class': 'col-sm-2 control-label'}}) }}
+        {{ form_errors(form.image.alt) }}
+    	<div class="col-sm-10">
+            {{ form_widget(form.image.alt, {'attr': {'class': 'form-control'}}) }}
+    	</div>
+    #}
+    	{{ form_label(form.image.file, "Image", {'attr': {'class': 'col-sm-2 control-label'}}) }}
+    	{{ form_errors(form.image.file) }}
+    	{{ form_widget(form.image.file, {'attr': {'class': 'form-control'}}) }}
+	</div>
+
+
+{# Le formulaire reste globalement le même,
+   On ne rajoute que le champ catégorie et le lien pour en ajouter #}
+<div class="well">
+  {# ... #}
+  
+  {{ form_row(form.categories) }}
+  <!--  a href="#" id="add_category" class="btn btn-default">Ajouter une catégorie</a-->
+  {# % include 'CollectionType_js.html.twig' % #} 
 </div>
+	  
+  {# Pour le bouton, pas de label ni d'erreur, on affiche juste le widget #}
+  {{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
+
+  {# Génération automatique des champs pas encore écrits.
+     Dans cet exemple, ce serait le champ CSRF (géré automatiquement par Symfony !)
+     et tous les champs cachés (type « hidden »). #}
+  {{ form_rest(form) }}
+
+  {# Fermeture de la balise <form> du formulaire HTML (</form>) #}
+  {{ form_end(form) }}
+</div>
+

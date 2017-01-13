@@ -15,11 +15,27 @@
           {{ advert.title }}
         </a>
         par {{ advert.author }},
-        le {{ advert.date|date('d/m/Y') }}
+        le {{ advert.date|date('d/m/Y') }} - 
+        {{ advert.nbApplications }} candidatures.
       </li>
     {% else %}
       <li>Pas (encore !) d'annonces</li>
     {% endfor %}
   </ul>
+  <h4>Avec paginator</h4>
+<ul class="pagination">
 
+  {# On utilise la fonction range(a, b) qui crée un tableau de valeurs entre a et b #}
+
+  {% for p in range(1, nbPages) %}
+
+    <li{% if p == page %} class="active"{% endif %}>
+
+      <a href="{{ path('oc_platform_home', {'page': p}) }}">{{ p }}</a>
+
+    </li>
+
+  {% endfor %}
+
+</ul>
 {% endblock %}

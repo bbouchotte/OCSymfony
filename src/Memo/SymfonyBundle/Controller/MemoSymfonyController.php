@@ -66,6 +66,13 @@ class MemoSymfonyController extends Controller
     public function part3Action() {
     	return $this->render('MemoSymfonyBundle:part3:index.html.twig');
     }
+
+    /**
+     * @Route("/part4", name="part4")
+     */
+    public function part4Action() {
+    	return $this->render('MemoSymfonyBundle:part4:index.html.twig');
+    }
     
     /**
      * @Route("/chap1_1", name="chap1_1")
@@ -178,6 +185,48 @@ class MemoSymfonyController extends Controller
      */
     public function part3_6Action() {
     	return $this->render('MemoSymfonyBundle:part3:part3_6.html.twig');
+    }
+    
+    /**
+     * @Route("/chap4_1", name="chap4_1")
+     */
+    public function part4_1Action() {
+    	return $this->render('MemoSymfonyBundle:part4:part4_1.html.twig');
+    }
+    
+    /**
+     * @Route("/chap4_2", name="chap4_2")
+     */
+    public function part4_2Action() {
+    	return $this->render('MemoSymfonyBundle:part4:part4_2.html.twig');
+    }
+    
+    /**
+     * @Route("/chap4_3", name="chap4_3")
+     */
+    public function part4_3Action() {
+    	return $this->render('MemoSymfonyBundle:part4:part4_3.html.twig');
+    }
+    
+    /**
+     * @Route("/chap4_4", name="chap4_4")
+     */
+    public function part4_4Action() {
+    	return $this->render('MemoSymfonyBundle:part4:part4_4.html.twig');
+    }
+    
+    /**
+     * @Route("/chap4_5", name="chap4_5")
+     */
+    public function part4_5Action() {
+    	return $this->render('MemoSymfonyBundle:part4:part4_5.html.twig');
+    }
+    
+    /**
+     * @Route("/chap4_6", name="chap4_6")
+     */
+    public function part4_6Action() {
+    	return $this->render('MemoSymfonyBundle:part4:part4_16html.twig');
     }
     
 }

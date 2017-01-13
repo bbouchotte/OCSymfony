@@ -33,6 +33,22 @@ oc_platform_delete:
     requirements:
         id: \d+
         
+oc_platform_purge:
+    path:      /purge/{days}
+    defaults:
+        _controller: OCPlatformBundle:Advert:purge
+    requirements:
+        id: \d+
+
+oc_platform_delete_application:
+    path:      /deleteApplication/{idAdvert}/{idApplication}
+    defaults:
+        _controller: OCPlatformBundle:Advert:deleteApplication
+    requirements:
+        idAdvert: \d+
+        idApplication: \d+
+        
+        
 oc_platform_gawc:
     path:     /gawc
     defaults:

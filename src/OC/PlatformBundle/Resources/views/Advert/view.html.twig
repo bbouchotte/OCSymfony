@@ -6,10 +6,12 @@
 
 {% block ocplatform_body %}
 
+{% if advert is not null %}
+
 	<div class="row">
     	<div class="col-sm-4">
         	{%  if advert.image is not null %}
-        		<img src="{{ advert.image.url }}" alt="{{ advert.image.alt }}" class="img-responsive">
+        		<img src="{{ advert.image.src }}" alt="{{ advert.image.alt }}" class="img-responsive">
         	{% endif %}
     	</div>
     	<div class="col-sm-8">
@@ -51,7 +53,11 @@
     		 </h4>
     		{% if applications is not null %}
     			{% for application in applications %}
-    				<p class="well"><b>{{ application.author }}</b> : {{ application.content }}</p>
+  					Le {{ application.date|date('d/m/Y') }} - {{ application.author }} :<br />
+  					{{ application.content }} <br />
+  					<a href="{{ path('oc_platform_delete_application', {'idAdvert': advert.id, 'idApplication': application.id}) }}">
+  						supprimer
+  					</a>
     			{% endfor %}
     		{% endif %}
     	</div>
@@ -77,5 +83,7 @@
       Supprimer l'annonce
     </a>
   </p>
+  
+{% endif %}
 
 {% endblock %}

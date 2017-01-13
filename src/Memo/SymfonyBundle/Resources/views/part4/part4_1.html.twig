@@ -1,0 +1,385 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap4.1
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/creer-des-formulaires-avec-symfony">
+			Chap 4.1 - Créer des formulaires avec Symfony 
+		</a>
+	</h3>
+	
+	<p>Objectif: hydrater l'objet.</p>
+	<p>Il faut un objet et un FormBuilder.</p>
+	<p>Depuis un controleur:</p>
+	<pre>$advert = new Advert();
+$advert->setAuthor('Benjamin'); // Va afficher cette valeur par défaut dans le formulaire
+
+$form = $this->createForm(AdvertType::class, $advert);
+// ou
+//$form = $this->get('form.factory')->create(AdvertType::class, $advert);
+
+if($request->isMethod('POST'))
+{
+	$form->handleRequest($request);
+	if($form->isValid())
+	{
+		$em = $this->getDoctrine()->getManager();
+		$em->persist($advert);
+		$em->flush();
+		
+		$request->getSession()->getFlashBag()->add('notice', 'Annonce enregistrée.');
+		
+		return $this->redirectToRoute('oc_platform_view',
+			array('id' => $advert->getId())
+		);
+	}
+}
+
+return $this->render('OCPlatformBundle:Advert:add.html.twig', array(
+		'form' => $form->createView(),
+));</pre>
+
+	<h4>Externaliser la définition de ses formulaires</h4>
+	<pre>php bin/console doctrine:generate:form OCPlatformBundle:Advert</pre>
+	<pre>// src/OC/PlatformBundle/Form/AdvertType.php
+...
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+
+class AdvertType extends AbstractType
+{
+    /**
+     * {@inheritdoc}
+     */
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder
+        ->add('date',		DateTimeType::class)
+        ->add('title',    	TextType::class)
+        ->add('text',   	TextareaType::class)
+        ->add('author',   	TextType::class)
+        ->add('published',	CheckboxType::class, 	array('required'	=>	false))
+        ->add('image',		ImageType::class)	// Imbrication d'un formulaire
+        ->add('categories', CollectionType::class, array(
+          'entry_type'   => CategoryType::class,
+          'allow_add'    => true,
+          'allow_delete' => true
+        ))
+        // OU
+        ->add('categories', EntityType::class, array(
+        	'class'        => 'OCPlatformBundle:Category',
+        	'choice_label' => 'name',
+        	'multiple'     => true,
+        	'query_builder' => function(CategoryRepository $repository) use($pattern) {
+        	  return $repository->getLikeQueryBuilder($pattern);
+        	}
+       	))
+        ->add('save',     	SubmitType::class)
+        ;
+    }</pre>
+    <p>Pour un CollectionType, ajouter le script: <a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/creer-des-formulaires-avec-symfony#/id/r-3623591">Code js sur Openclassrooms</a>.</p>
+    <p>Pour un EntityType, voir aussi les options <a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/creer-des-formulaires-avec-symfony#/id/r-3777435">multiple et expanded (par défaut à false)</a>.</p>
+    <p>Pour l'imbrication, précisez cascade={"persist"} dans Entity/Advert.php</p>
+    <pre>/**
+ * @ORM\OneToOne(targetEntity="OC\PlatformBundle\Entity\Image", cascade={"persist"})
+ */
+private $image;</pre>
+
+    <pre>// src/OC/PlatformBundle/Form/ImageType.php
+...
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder
+        	->add('url',	TextType::class)
+        	->add('alt',	TextType::class)
+        ;</pre>
+        
+	<pre>// src/OC/PlatformBundle/Form/CategoryType.php
+...
+    $builder
+      ->add('name', TextType::class);
+...</pre>
+
+	<pre>// src/OC/PlatformBundle/Repository/CategoryRepository.php
+...
+  public function getLikeQueryBuilder($pattern)
+  {
+    return $this
+      ->createQueryBuilder('c')
+      ->where('c.name LIKE :pattern')
+      ->setParameter('pattern', $pattern)
+    ;
+  }
+...</pre>
+	
+	<h4>Personnaliser l'affichage d'un formulaire</h4>
+	<pre># app/config/config.yml
+twig:
+    form_themes:
+        - 'bootstrap_3_layout.html.twig'</pre>
+	<pre>{% filter escape %}{% verbatim %}  {{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
+
+  {{ form_errors(form) }} {# Les erreurs générales du formulaire. #}
+
+  {{ form_row(form.date) }} {# Génération du label + error + widget pour un champ. #}
+
+  <div class="form-group"> {# Génération manuelle et éclatée : #}
+    {{ form_label(form.title, "Titre de l'annonce", 
+        {'label_attr': {'class': 'col-sm-2 control-label'}}) }} {# Génération du label. #}
+    {{ form_errors(form.title) }} {# Affichage des erreurs pour ce champ précis. #}
+
+    <div class="col-sm-10">
+      {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }} {# Génération de l'input. #}
+    </div>
+  </div>
+
+  <div class="form-group">
+    {{ form_label(form.content, "Contenu de l'annonce", {'label_attr': {'class': 'col-sm-2 control-label'}}) }}
+    {{ form_errors(form.title) }}
+    <div class="col-sm-10">
+      {{ form_widget(form.content, {'attr': {'class': 'form-control'}}) }}
+    </div>
+  </div>
+
+  {{ form_row(form.author) }}
+  {{ form_row(form.published) }}
+  
+  <h4>Image</h4>
+  <div class="form-group">
+    {{ form_label(form.image.url, "URL de l'image", {'label_attr': {'class': 'col-sm-2 control-label'}}) }}
+    {{ form_errors(form.image.url) }}
+    <div class="col-sm-10">
+      {{ form_widget(form.image.url, {'attr': {'class': 'form-control'}}) }}
+    </div>
+  </div>										
+  <div class="form-group">
+    {{ form_label(form.image.alt, "Nom de l'image (alt)", {'label_attr': {'class': 'col-sm-2 control-label'}}) }}
+    {{ form_errors(form.image.alt) }}
+    <div class="col-sm-10">
+      {{ form_widget(form.image.alt, {'attr': {'class': 'form-control'}}) }}
+    </div>
+  </div>
+
+  {{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }} {# Pour le bouton, pas de label ni d'erreur, on affiche juste le widget #}
+
+  {# Génération automatique des champs pas encore écrits.
+     Dans cet exemple, ce serait le champ CSRF (géré automatiquement par Symfony !)
+     et tous les champs cachés (type « hidden »). #}
+  {{ form_rest(form) }}
+  {{ form_end(form) }} {# Fermeture de la balise <form> du formulaire HTML (</form>) #}{% endverbatim %}{% endfilter %}</pre>
+
+	<p>La méthode $formBuilder->add() du FormBuilder a Les arguments suivants : nom du champ, type du champ, options du champ sous forme de tableau.</p>
+	
+	<table>
+		<thead id="r-3623408" data-claire-element-id="5756038"><tr id="r-3623407" data-claire-element-id="5756037"><th id="r-3623396" data-claire-element-id="5756026"><p id="r-3623395" data-claire-element-id="5756025">Texte</p></th><th id="r-3623398" data-claire-element-id="5756028"><p id="r-3623397" data-claire-element-id="5756027">Choix</p></th><th id="r-3623400" data-claire-element-id="5756030"><p id="r-3623399" data-claire-element-id="5756029">Date et temps</p></th><th id="r-3623402" data-claire-element-id="5756032"><p id="r-3623401" data-claire-element-id="5756031">Divers</p></th><th id="r-3623404" data-claire-element-id="5756034"><p id="r-3623403" data-claire-element-id="5756033">Multiple</p></th><th id="r-3623406" data-claire-element-id="5756036"><p id="r-3623405" data-claire-element-id="5756035">Caché</p></th></tr></thead><tbody id="r-3623424" data-claire-element-id="5756054"><tr id="r-3623423" data-claire-element-id="5756053"><td id="r-3623411" data-claire-element-id="5756041"><p id="r-3623409" data-claire-element-id="5756039"><code><a href="https://symfony.com/doc/current/reference/forms/types/text.html">TextType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/textarea.html">TextareaType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/email.html">EmailType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/integer.html">IntegerType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/money.html">MoneyType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/number.html">NumberType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/password.html">PasswordType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/percent.html">PercentType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/search.html">SearchType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/url.html">UrlType</a></code></p><p id="r-3623410" data-claire-element-id="5756040"><a href="https://symfony.com/doc/current/reference/forms/types/range.html"><code data-claire-semantic="text">RangeType</code></a></p></td><td id="r-3623414" data-claire-element-id="5756044"><p id="r-3623412" data-claire-element-id="5756042"><code><a href="https://symfony.com/doc/current/reference/forms/types/choice.html">ChoiceType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/entity.html">EntityType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/country.html">CountryType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/language.html">LanguageType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/locale.html">LocaleType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/timezone.html">TimezoneType</a></code></p><p id="r-3623413" data-claire-element-id="5756043"><a href="https://symfony.com/doc/current/reference/forms/types/currency.html">CurrencyType</a></p></td><td id="r-3623416" data-claire-element-id="5756046"><p id="r-3623415" data-claire-element-id="5756045"><code><a href="https://symfony.com/doc/current/reference/forms/types/date.html">DateType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/datetime.html">DatetimeType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/time.html">TimeType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/birthday.html">BirthdayType</a></code></p></td><td id="r-3623418" data-claire-element-id="5756048"><p id="r-3623417" data-claire-element-id="5756047"><code><a href="https://symfony.com/doc/current/reference/forms/types/checkbox.html">CheckboxType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/file.html">FileType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/radio.html">RadioType</a></code></p></td><td id="r-3623420" data-claire-element-id="5756050"><p id="r-3623419" data-claire-element-id="5756049"><code><a href="https://symfony.com/doc/current/reference/forms/types/collection.html">CollectionType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/repeated.html">RepeatedType</a></code></p></td><td id="r-3623422" data-claire-element-id="5756052"><p id="r-3623421" data-claire-element-id="5756051"><code><a href="https://symfony.com/doc/current/reference/forms/types/hidden.html">HiddenType</a></code><br><code><a href="https://symfony.com/doc/current/reference/forms/types/csrf.html">CsrfType</a></code></p></td></tr></tbody>
+	</table>
+	
+	<p>Un champ de formulaire est requis par défaut. Si vous voulez le rendre facultatif, préciser cette option required.</p>
+	<pre>$formBuilder->add('published', CheckboxType::class, array('required' => false))</pre>
+	<p>
+		<a href="https://symfony.com/doc/current/book/forms.html#form-theming">
+			form theming.
+		</a>
+	</p>
+	<p>
+		<a href="https://symfony.com/doc/current/cookbook/form/create_custom_field_type.html">
+			Créer des types de champ personnalisés.
+		</a>
+	</p>
+	
+	<h4>L'héritage de formulaire</h4>
+	<p>Exemple: ne pas pemettre de modifier la date lors de l'édition:</p>
+	<pre>// src/OC/PlatformBundle/Form/AdvertEditType.php
+...
+class AdvertEditType extends AbstractType {
+  public function buildForm(FormBuilderInterface $builder, array $options) {
+    $builder->remove('date');
+  }
+  public function getParent() {
+    return AdvertType::class;
+  }
+  // supprimer la méthode configureOptions()
+}</pre>
+	<p>Astuce pour le formulaire: ajouter <pre>{% verbatim %}{% if form.date is defined %}{% endverbatim %}</pre>
+	
+	<h4>Construire un formulaire différemment selon des paramètres</h4>
+	<p>Exemple: empêcher de dépublier une annonce une fois qu'elle est publiée</p>
+	<pre>// On ajoute une fonction qui va écouter un évènement
+  $builder->addEventListener(
+    FormEvents::PRE_SET_DATA,    // 1er argument : L'évènement qui nous intéresse : ici, PRE_SET_DATA
+    function(FormEvent $event) { // 2e argument : La fonction à exécuter lorsque l'évènement est déclenché
+        $advert = $event->getData();	// On récupère notre objet Advert sous-jacent
+        if (null === $advert) { // Cette condition est importante, on en reparle plus loin
+            return;
+        }
+        // Si l'annonce n'est pas publiée, ou si elle n'existe pas encore en base (id est null)
+        if (!$advert->getPublished() || null === $advert->getId()) {
+            $event->getForm()->add('published', CheckboxType::class, array('required' => false));
+        } else {
+            $event->getForm()->remove('published');
+        }
+    }
+);</pre>
+	<p>On peut aussi ajouter un service au lieu d'une simple fonction: 
+		<a href="https://symfony.com/doc/current/cookbook/form/dynamic_form_modification.html">
+			documentation des évènements de formulaire
+		</a>. Exemple: création des fameuses combobox : deux champs select dont le deuxième (par exemple ville) dépend de la valeur du premier (par exemple pays).
+	</p>
+	
+	<h4>Le type de champ File pour envoyer des fichiers</h4>
+	<pre><// src/OC/PlatformBundle/Form/ImageType.php
+...
+  public function buildForm(FormBuilderInterface $builder, array $options) {
+    $builder
+      ->add('file', FileType::class)
+    ;
+  }
+}</pre>
+	<p>L'enctype est automatiquement rajouté dès que Symfony détecte un champ de typeFileType grâce à la fonction form_start(form).</p>
+	<p>Automatiser le traitement grâce aux évènements:</p>
+	<p>PrePersit et PreUpdate: remplir les attributs $url et $alt.</p>
+	<p>PostPersit et PostUpdate: déplacer le fichier envoyé (ne pas le faire avant en cas d'échec).</p>
+	<p>PreRemove: sauvegarder le nom du fichier dans un attribut non persisté pour suppression.</p>
+	<p>PostRemove: supprimer le fichier dont le nom a été stocké dans l'attribut temporaire.</p>
+	<p>Penser à mettre dans l'entité Advert:</p><pre>@ORM\OneToOne(targetEntity="OC\PlatformBundle\Entity\Image", cascade={"persist", "remove"})</pre>
+	<p>Il est impératif d'ajouter une règle de validation@Assert\File (prochainement).</p>
+	<p>Des bundles existent pour simplifier l'envoi de fichier. Par ex: 
+		<a href="https://github.com/dustin10/VichUploaderBundle">
+			VichUploaderBundle
+		</a>.
+	</p>
+	<pre><// src/OC/PlatformBundle/Entity/Image
+//...
+  private $file;		// On ajoute cet attribut pour y stocker le nom du fichier temporairement
+  private $tempFilename;
+
+  // On modifie le setter de File, pour prendre en compte l'upload d'un fichier lorsqu'il en existe déjà un autre
+  public function setFile(UploadedFile $file) {
+    $this->file = $file;
+    if (null !== $this->url) { // On vérifie si on avait déjà un fichier pour cette entité
+      $this->tempFilename = $this->url; // On sauvegarde l'extension du fichier pour le supprimer plus tard
+      $this->url = null;
+      $this->alt = null;
+    }
+  }
+  /**
+   * @ORM\PrePersist()
+   * @ORM\PreUpdate()
+   */
+  public function preUpload() {
+    if (null === $this->file) { return; }
+    // Le nom du fichier est son id, on doit juste stocker également son extension
+    $this->url = $this->file->guessExtension(); // On devrait renommer cet attribut en « extension », plutôt que « url »
+    $this->alt = $this->file->getClientOriginalName(); // Valeur du nom du fichier sur le PC de l'internaute
+  }
+  /**
+   * @ORM\PostPersist()
+   * @ORM\PostUpdate()
+   */
+  public function upload() {
+    if (null === $this->file) { return; }
+    if (null !== $this->tempFilename) { // Si on avait un ancien fichier, on le supprime
+      $oldFile = $this->getUploadRootDir().'/'.$this->id.'.'.$this->tempFilename;
+      if (file_exists($oldFile)) {
+        unlink($oldFile);
+      }
+    }
+    $this->file->move(
+      $this->getUploadRootDir(), // Le répertoire de destination
+      $this->id.'.'.$this->url   // Le nom du fichier à créer, ici « id.extension »
+    );
+  }
+  /**
+   * @ORM\PreRemove()
+   */
+  public function preRemoveUpload() {
+    // On sauvegarde temporairement le nom du fichier, car il dépend de l'id
+    $this->tempFilename = $this->getUploadRootDir().'/'.$this->id.'.'.$this->url;
+  }
+  /**
+   * @ORM\PostRemove()
+   */
+  public function removeUpload() {
+    // En PostRemove, on n'a pas accès à l'id, on utilise notre nom sauvegardé
+    if (file_exists($this->tempFilename)) {
+      unlink($this->tempFilename);
+    }
+  }
+  public function getUploadDir() {
+    return 'uploads/img'; // Chemin relatif vers l'image pour un navigateur
+  }
+
+  protected function getUploadRootDir() {
+    return __DIR__.'/../../../../web/'.$this->getUploadDir(); // Chemin relatif vers l'image pour notre code PHP
+  }
+  // …
+}</pre>
+	
+	<h4>Confirmation de suppression</h4>
+	<pre>// src/OC/PlatformBundle/Controller/AdvertController.php
+  public function deleteAction(Request $request, $id) {
+    $em = $this->getDoctrine()->getManager();
+    $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+
+    // On crée un formulaire vide, qui ne contiendra que le champ CSRF
+    // Cela permet de protéger la suppression d'annonce contre cette faille
+    $form = $this->get('form.factory')->create();
+
+    if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
+      $em->remove($advert);
+      $em->flush();
+      $request->getSession()->getFlashBag()->add('info', "L'annonce a bien été supprimée.");
+      return $this->redirectToRoute('oc_platform_home');
+    }
+    return $this->render('OCPlatformBundle:Advert:delete.html.twig', array(
+      'advert' => $advert,
+      'form'   => $form->createView(),
+    ));
+  }</pre>
+	<pre>{% filter escape %}{% verbatim %}{# src/OC/PlatformBundle/Resources/views/Advert/delete.html.twig #}
+  <h2>Supprimer une annonce</h2>
+  <p>Etes-vous certain de vouloir supprimer l'annonce "{{ advert.title }}" ?</p>
+
+  {# On met l'id de l'annonce dans la route de l'action du formulaire #}
+  <form action="{{ path('oc_platform_delete', {'id': advert.id}) }}" method="post">
+    <a href="{{ path('oc_platform_view', {'id': advert.id}) }}" class="btn btn-default">
+      <i class="glyphicon glyphicon-chevron-left"></i>
+      Retour à l'annonce
+    </a>
+    {# Ici j'ai écrit le bouton de soumission à la main #}
+    <input type="submit" value="Supprimer" class="btn btn-danger" />
+    {# Ceci va générer le champ CSRF #}
+    {{ form_rest(form) }}
+  </form>{% endverbatim %}{% endfilter %}</pre>
+	
+	<h4>En résumé</h4>
+	<ul>
+		<li>Un formulaire se construit sur un objet existant, et son objectif est d'hydrater cet objet.</li>
+		<li>Un formulaire se construit grâce à unFormBuilder, et dans un fichierXxxTypeindépendant.</li>
+		<li>En développement, le rendu d'un formulaire se fait en une seule ligne grâce à la méthode{% verbatim %}{{ form(form) }}{% endverbatim %}.</li>
+		<li>Il est possible d'imbriquer les formulaires grâce auxXxxType.</li>
+		<li>Le type de champCollectionType affiche une liste de champs d'un certain type.</li>
+		<li>Le type de champEntityType retourne une ou plusieurs entités.</li>
+		<li>Il est possible d'utiliser le mécanisme d'héritage pour créer des formulaires différents mais ayant la même base.</li>
+		<li>Le type de champFileType permet l'upload de fichier, et se couple aux entités grâce aux évènements Doctrine.</li>
+	</ul>
+
+		
+{% endblock %}	

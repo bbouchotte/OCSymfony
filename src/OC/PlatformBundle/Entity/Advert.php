@@ -19,6 +19,8 @@ class Advert
 	public function __construct() {
 		$this->date = new \Datetime();
 		$this->categories = new ArrayCollection();
+		$this->applications = new ArrayCollection();
+		$this->advertSkills = new ArrayCollection();
 		$this->setNbApplications(0);
 	}
 	
@@ -28,6 +30,7 @@ class Advert
 	public function updateDate() {
 		$this->setUpdatedAt(new \Datetime());
 	}
+	
 	public function increaseNbApplications() {
 		$this->nbApplications ++;
 	}
@@ -37,7 +40,7 @@ class Advert
 	}
 	
 	/**
-	 * @ORM\OneToOne(targetEntity="OC\PlatformBundle\Entity\Image", cascade={"persist"})
+	 * @ORM\OneToOne(targetEntity="OC\PlatformBundle\Entity\Image", cascade={"persist", "remove"})
 	 */
 	private $image;
 	
@@ -54,7 +57,7 @@ class Advert
 	/**
 	 * @ORM\OneToMany(targetEntity="OC\PlatformBundle\Entity\AdvertSkill", mappedBy="advert", cascade={"remove"})
 	 */
-	private $advertSkill;
+	private $advertSkills;
 	
 	/**
 	 * @Gedmo\Slug(fields={"title"})
@@ -448,5 +451,15 @@ class Advert
     public function getSlug()
     {
         return $this->slug;
+    }
+
+    /**
+     * Get advertSkills
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAdvertSkills()
+    {
+        return $this->advertSkills;
     }
 }

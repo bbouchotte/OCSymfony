@@ -4,6 +4,7 @@ namespace OC\PlatformBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
  * Image
@@ -94,8 +95,6 @@ class Image
     
     private $tempFilename;	// pour suppression ancien fichier
     
-    private $src;			// pour template
-    
     public function getUploadDir()
     {
     	// On retourne le chemin relatif vers l'image pour un navigateur (relatif au répertoire /web donc)
@@ -123,14 +122,6 @@ class Image
     		$this->url = null;
     		$this->alt = null;
     	}
-    }
-    
-    public function getSrc()
-    {
-    	if(null !== $this->url && null !== $this->alt){
-    		return '/' . $this->getUploadDir() . '/' . $this->id . '.' . $this->url;
-    	}
-    	return null;
     }
 
     /**

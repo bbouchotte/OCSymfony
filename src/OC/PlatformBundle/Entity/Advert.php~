@@ -19,7 +19,9 @@ class Advert
 	public function __construct() {
 		$this->date = new \Datetime();
 		$this->categories = new ArrayCollection();
-		$this->setNbApplications(0);
+		$this->applications = new ArrayCollection();
+		$this->advertSkills = new ArrayCollection();
+		//$this->setNbApplications(0);
 	}
 	
 	/**
@@ -28,6 +30,7 @@ class Advert
 	public function updateDate() {
 		$this->setUpdatedAt(new \Datetime());
 	}
+	
 	public function increaseNbApplications() {
 		$this->nbApplications ++;
 	}
@@ -42,7 +45,7 @@ class Advert
 	private $image;
 	
 	/**
-	 * @ORM\ManyToMany(targetEntity="OC\PlatformBundle\Entity\Category", cascade={"persist"})
+	 * @ORM\ManyToMany(targetEntity="OC\PlatformBundle\Entity\Category")
 	 */
 	private $categories;
 	
@@ -54,7 +57,7 @@ class Advert
 	/**
 	 * @ORM\OneToMany(targetEntity="OC\PlatformBundle\Entity\AdvertSkill", mappedBy="advert", cascade={"remove"})
 	 */
-	private $advertSkill;
+	private $advertSkills;
 	
 	/**
 	 * @Gedmo\Slug(fields={"title"})
