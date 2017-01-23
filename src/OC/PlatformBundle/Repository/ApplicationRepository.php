@@ -10,6 +10,17 @@ namespace OC\PlatformBundle\Repository;
  */
 class ApplicationRepository extends \Doctrine\ORM\EntityRepository
 {
+	public function findLastByIp($ip)
+	{
+		$qb = $this->createQueryBuilder('a')
+		->andWhere('a.ip = :ip')
+		->setParameter('ip', $ip)
+		->orderBy('a.date', 'desc')
+		->setMaxResults(1)
+		;
+		return $qb->getQuery()->getOneOrNullResult();
+	}
+	
 	public function getApplicationsWithAdvert($limit) {
 		$qb = $this
 		->createQueryBuilder('a')

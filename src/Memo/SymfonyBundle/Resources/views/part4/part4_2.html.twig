@@ -1,0 +1,150 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap4.2
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/validez-vos-donnees-1">
+			Chap 4.2 - Validez vos données 
+		</a>
+	</h3>
+	
+	<p>Avec le validator, on peut valider n'importe quel objet, entité ou non, le tout sans avoir besoin de formulaire.</p>
+	<p>Annotations (@Assert) ou fichier externe à l'entité.</p>
+	<pre>...
+use Symfony\Component\Validator\Constraints as Assert;
+...
+  /**
+   * @var \DateTime
+   *
+   * @ORM\Column(name="date", type="datetime")
+   * @Assert\DateTime()
+   */
+  private $date;
+  @Assert\Length(min=10, minMessage="Le titre doit faire au moins {% verbatim %}{{ limit }}{% endverbatim %} caractères.")
+  @Assert\NotBlank()
+  @Assert\Url()
+   * @Assert\Valid()
+   */
+  private $image;</pre>
+  <p><a href="https://symfony.com/doc/current/reference/constraints.html">
+  		Documentation officielle 
+  	</a>
+  </p>
+  <p><a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/validez-vos-donnees-1#/id/r-3623902">
+  	Les principales</a> sur Openclassrooms.
+  </p>
+  <p>Déclencher la validation:</p>
+  <pre>$validator = $this->get('validator');
+// On déclenche la validation sur notre object
+$listErrors = $validator->validate($advert);
+// Si $listErrors n'est pas vide, on affiche les erreurs
+if(count($listErrors) > 0) {
+  // $listErrors est un objet, sa méthode __toString permet de lister joliement les erreurs
+  return new Response((string) $listErrors);
+} else {
+  return new Response("L'annonce est valide !");
+}</pre>
+
+	<h4>La validation automatique sur les formulaires</h4>
+	<p>Dans la méthode handleRequest, le formulaire $form va lui-même faire appel au service validator, et valider l'objet qui vient d'être hydraté par le formulaire. Ensuite, la méthode isValid vient compter le nombre d'erreur et retourne false s'il y a au moins une erreur. <p>
+	<p>Les erreurs sont assignées au formulaire, et sont affichées dans la vue.</p>
+	
+	<h4>Valider depuis un getter</h4>
+	<p>Annonce no valide, erreur concernant l'ensemble du formulaire:</p>
+	<pre>/**
+* @Assert\IsTrue()
+*/
+public function isAdvertValid() {
+  return false;
+}</pre>
+	<p>Déclencher une erreur liée à un champs en particulier:</p>
+	<pre>/**
+* @Assert\IsTrue()
+*/
+public function isTitle() {
+  return false;
+}</pre>
+
+	<h4>Valider intelligemment un attribut objet</h4>
+	<p>Important! Valider un sous-objet n'est pas le comportement par défaut.</p>
+	<pre>class A {}
+  /**
+  * @Assert\Valid()
+  */
+  private $b;
+}
+
+class B {
+  /**
+   * @Assert\Range(max=10)
+   */
+  private $number;
+}</pre>
+
+	<h4>Valider depuis un Callback</h4>
+	<p>personnalisable à souhait. Ex: mot de passe différent du pseudo ou censurer des mots:</p>
+	<pre>// src/OC/PlatformBundle/Entity/Advert.php
+//...
+// Ajoutez ce use pour le contexte
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+// …
+  /**
+   * @Assert\Callback
+   */
+  public function isContentValid(ExecutionContextInterface $context)
+  {
+    $forbiddenWords = array('démotivation', 'abandon');
+    // On vérifie que le contenu ne contient pas l'un des mots
+    if (preg_match('#'.implode('|', $forbiddenWords).'#', $this->getContent())) {
+      // La règle est violée, on définit l'erreur
+      $context
+        ->buildViolation('Contenu invalide car il contient un mot interdit.') // message
+        ->atPath('content')                                                   // attribut de l'objet qui est violé
+        ->addViolation() // ceci déclenche l'erreur, ne l'oubliez pas
+      ;
+    }
+  }
+}</pre>
+
+	<h4>Valider un champ unique</h4>
+	<p>Pour vérifier qu'une adresse e-mail n'existe pas déjà dans la base de données par exemple.</p>
+	<pre>use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;</pre>
+	<p>Attention, cette annotation se définit sur la classe et non sur une méthode.</p>
+	<pre>∕...
+/**
+ * @ORM\Entity
+ * @UniqueEntity(fields="title", message="Une annonce existe déjà avec ce titre.")
+ */
+class Advert</pre>
+
+	<h4>Valider selon nos propres contraintes</h4>
+	<p>Apprendre à créer notre propre contrainte, que l'on pourra utiliser en annotation : @NotreContrainte.</p>
+	<p>->réutilisable sur différents objets.</p>
+	<p>->placer le code de validation dans un objet externe… et surtout dans un service ! Indispensable.</p>
+	<p>Exemple, créer une contrainte AntiFlood:</p>
+	
+
+
+{% filter escape %}{% verbatim %}{% endverbatim %}{% endfilter %}
+	
+	<h4>En résumé</h4>
+	<ul>
+		<li>Le composant validator permet de valider les données d'un objet suivant des règles définies.</li>
+		<li>Cette validation est systématique lors de la soumission d'un formulaire : il est en effet impensable de laisser l'utilisateur entrer ce qu'il veut sans vérifier !</li>
+		<li>Les règles de validation se définissent via les annotations directement à côté des attributs de la classe à valider. Vous pouvez bien sûr utiliser d'autres formats tels que le YAML ou le XML.</li>
+		<li>Il est également possible de valider à l'aide de getters, de callbacks ou même de services. Cela rend la procédure de validation très flexible et très puissante.</li>
+	</ul>
+
+		
+{% endblock %}	

@@ -10,4 +10,12 @@ namespace OC\PlatformBundle\Repository;
  */
 class SkillRepository extends \Doctrine\ORM\EntityRepository
 {
+	public function getLikeQueryBuilder($pattern)
+	{
+		return $this
+		->createQueryBuilder('c')
+		->where('c.name LIKE :pattern')
+		->setParameter('pattern', $pattern)
+		;
+	}
 }

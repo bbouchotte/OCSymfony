@@ -64,8 +64,6 @@ class Image
 			unlink($this->tempFilename);
 		}
 	}
-
-	public function zeqfze() {}
 	
     /**
      * @var int

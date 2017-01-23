@@ -1,5 +1,6 @@
 parameters:
     minLength: 10
+    floodTime: 20
 
 services:
 #    oc_platform.example:
@@ -34,3 +35,16 @@ services:
         class: OC\PlatformBundle\Purger\OCPurger
         arguments:  
             - "@doctrine"
+            
+    oc_platform.validator.antiflood:
+        class: OC\PlatformBundle\Validator\AntifloodValidator
+        arguments: ["@request_stack", "@doctrine.orm.entity_manager", '%floodTime%', "@oc_platform_iptime" ]
+        tags:
+            - { name: validator.constraint_validator, alias: oc_platform_antiflood }
+            # C'est avec l'alias qu'on retrouvera le service
+
+    oc_platform_iptime:
+        class: OC\PlatformBundle\Service\IPtime
+        arguments: [ "@doctrine.orm.entity_manager", '%floodTime%' ]
+            
+            

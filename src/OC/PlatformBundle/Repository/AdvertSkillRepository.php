@@ -10,4 +10,13 @@ namespace OC\PlatformBundle\Repository;
  */
 class AdvertSkillRepository extends \Doctrine\ORM\EntityRepository
 {
+	public function getLikeQueryBuilder($pattern)
+	{
+		return $this
+		->createQueryBuilder('ads')
+		->where('ads.name LIKE :pattern')
+		->setParameter('pattern', $pattern)
+		;
+	}
+
 }

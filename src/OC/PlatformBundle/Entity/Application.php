@@ -3,6 +3,7 @@
 namespace OC\PlatformBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use OC\PlatformBundle\Validator\Antiflood;
 
 /**
  * Application
@@ -61,8 +62,15 @@ class Application
      * @var \DateTime
      *
      * @ORM\Column(name="date", type="datetime")
+     * @Antiflood()
      */
     private $date;
+    
+    /**
+     * @ORM\Column(type="text")
+     */
+    private $ip;
+    
     
     public function __construct() {
     	$this->date = new \Datetime();
@@ -173,5 +181,29 @@ class Application
     public function getAdvert()
     {
         return $this->advert;
+    }
+
+    /**
+     * Set ip
+     *
+     * @param string $ip
+     *
+     * @return Application
+     */
+    public function setIp($ip)
+    {
+        $this->ip = $ip;
+
+        return $this;
+    }
+
+    /**
+     * Get ip
+     *
+     * @return string
+     */
+    public function getIp()
+    {
+        return $this->ip;
     }
 }

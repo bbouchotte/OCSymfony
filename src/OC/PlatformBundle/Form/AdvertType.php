@@ -16,6 +16,8 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use OC\PlatformBundle\Repository\CategoryRepository;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use OC\PlatformBundle\Repository\SkillRepository;
+use OC\PlatformBundle\Repository\AdvertSkillRepository;
 
 class AdvertType extends AbstractType
 {
@@ -41,10 +43,16 @@ class AdvertType extends AbstractType
 	        		'class'        => 'OCPlatformBundle:Category',
 	        		'choice_label' => 'name',
 	        		'multiple'     => true,
-	        		'query_builder' => function(CategoryRepository $repository) use($pattern) {
-	        			return $repository->getLikeQueryBuilder($pattern);
-	        		}
+	        		//'query_builder' => function(CategoryRepository $repository) use($pattern) {
+	        		//	return $repository->getLikeQueryBuilder($pattern);
+	        		//}
 	        ))
+	       /* ->add('advert_skills', EntityType::class, array(
+	        		'class'			=> 'OCPlatformBundle:Advert_Skill',
+	        		'choice_label' => 'skill',
+	        		'multiple'		=> true
+	        ))*/
+
 	       /* ->add('skills', EntityType::class, array(
 	        		'class'        => 'OCPlatformBundle:Category',
 	        		'choice_label' => 'name',

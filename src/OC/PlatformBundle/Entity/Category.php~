@@ -4,6 +4,7 @@ namespace OC\PlatformBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 /**
@@ -11,7 +12,6 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class Category
 {
-
 	public function __construct() {
 		$this->adverts = new ArrayCollection();
 	}

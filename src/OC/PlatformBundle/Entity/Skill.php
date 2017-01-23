@@ -3,6 +3,7 @@
 namespace OC\PlatformBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Skill
@@ -12,6 +13,16 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Skill
 {
+	public function __construct()
+	{
+		$this->advert_skills = new ArrayCollection();
+	}
+	
+	/**
+	 * @ORM\OneToMany(targetEntity="OC\PlatformBundle\Entity\Advert_Skill", mappedBy="skill", cascade={"remove"})
+	 */
+	private $advert_skills;
+	
     /**
      * @var int
      *
@@ -61,5 +72,39 @@ class Skill
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Add advertSkill
+     *
+     * @param \OC\PlatformBundle\Entity\Advert_Skill $advertSkill
+     *
+     * @return Skill
+     */
+    public function addAdvertSkill(\OC\PlatformBundle\Entity\Advert_Skill $advertSkill)
+    {
+        $this->advert_skills[] = $advertSkill;
+
+        return $this;
+    }
+
+    /**
+     * Remove advertSkill
+     *
+     * @param \OC\PlatformBundle\Entity\Advert_Skill $advertSkill
+     */
+    public function removeAdvertSkill(\OC\PlatformBundle\Entity\Advert_Skill $advertSkill)
+    {
+        $this->advert_skills->removeElement($advertSkill);
+    }
+
+    /**
+     * Get advertSkills
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAdvertSkills()
+    {
+        return $this->advert_skills;
     }
 }

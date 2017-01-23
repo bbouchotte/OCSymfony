@@ -36,7 +36,7 @@
 				<h4>Compétences:</h4>
 				{% if advertSkills is not null  %}
 					{% for advertSkill in advertSkills %}
-						{{ advertSkill.skill.name }} : {{ advertSkill.level }}<br>
+						{{ advertSkill.skill.name }} : {{ advertSkill.skill.level }}<br>
 					{% endfor %}
 				{% endif %}
 			</i>
@@ -51,13 +51,14 @@
     			{% endif %}
     		 	candidatures:
     		 </h4>
-    		{% if applications is not null %}
-    			{% for application in applications %}
+    		{% if advert.applications is not null %}
+    			{% for application in advert.applications %}
   					Le {{ application.date|date('d/m/Y') }} - {{ application.author }} :<br />
   					{{ application.content }} <br />
   					<a href="{{ path('oc_platform_delete_application', {'idAdvert': advert.id, 'idApplication': application.id}) }}">
   						supprimer
   					</a>
+  					{% if not loop.last %}<br />{% endif %}
     			{% endfor %}
     		{% endif %}
     	</div>

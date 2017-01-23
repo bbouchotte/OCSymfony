@@ -15,21 +15,52 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
  */
 class AdvertRepository extends \Doctrine\ORM\EntityRepository 
 { // ou extends EntityRepository si on ajoute: use \Doctrine\ORM\EntityRepository;
+	
+	public function getCompleteAdvert($id)
+	{
+		$qb = $this->createQueryBuilder('a')
+			->andWhere('a.id = :id')
+			->setParameter('id', $id)
+			->leftJoin('a.image', 'i')
+			->addSelect('i')
+			->leftJoin('a.categories', 'c')
+			->addSelect('c')
+			->leftJoin('a.applications', 'app')
+			->addSelect('app')
+		//	->innerJoin('a.advert_skills', 'as')
+		//	->addSelect('as')
+		/*	->leftJoin('as.skill', 's')
+			->addSelect('s')*/
+		//	->setMaxResults(1)
+		;
+		return $qb->getQuery()->getSingleResult();
+	}
 
-public function findByDays($days)
-{
-	$date = date('Y-m-d H:i:s', time() - ($days * 24 * 60 * 60));
+	public function findLastByIp($ip)
+	{
+		$qb = $this->createQueryBuilder('a')
+			->andWhere('a.ip = :ip')
+			->setParameter('ip', $ip)
+			->orderBy('a.updatedAt', 'desc')
+			->setMaxResults(1)
+		;
+		return $qb->getQuery()->getOneOrNullResult();
+	}
 
-	$qb = $this->createQueryBuilder('a')
-	->andWhere("a.date	< :date")
-	->andWhere('a.nbApplications = 0')
-	->setParameter('date', $date)
-	;
-	$adverts = $qb->getQuery()->getResult();
-
-	return $adverts;
-
-}
+	public function findByDays($days)
+	{
+		$date = date('Y-m-d H:i:s', time() - ($days * 24 * 60 * 60));
+	
+		$qb = $this->createQueryBuilder('a')
+		->andWhere("a.date	< :date")
+		->andWhere('a.nbApplications = 0')
+		->setParameter('date', $date)
+		;
+		$adverts = $qb->getQuery()->getResult();
+	
+		return $adverts;
+	
+	}
 	public function getAdverts($page, $nbPerPage) {
 		$query = $this->createQueryBuilder('a')
 //			->leftJoin('a.image', 'i')
