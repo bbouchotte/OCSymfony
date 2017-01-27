@@ -1,0 +1,309 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+	{{ parent() }}-Chap4.3
+	
+{% endblock %}
+
+{% block body %}
+
+	{{ parent() }}
+
+{% endblock %}
+
+{% block body_content %}	
+	<h3>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/securite-et-gestion-des-utilisateurs-1">
+			Chap 4.3 - Sécurité et gestion des utilisateurs 
+		</a>
+	</h3>
+	
+	<p>Deux mécanismes: authentification (géré par le firewall) et autorisation (géré par l'access control).
+		<a href="https://symfony.com/doc/current/book/security.html">
+			Documentation officielle
+		</a>.
+	</p>
+	<p>app/config/security.yml</p>
+	<pre>security:
+    encoders:
+        OC\UserBundle\Entity\User: sha512 #plaintext
+        
+    role_hierarchy:		# Le nom d'un rôle doit commencer par ROLE_
+        ROLE_USER: ~
+        ROLE_AUTHOR: ~
+        ROLE_ADMIN:       [ROLE_USER, ROLE_AUTHOR ]
+        ROLE_SUPER_ADMIN: [ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]
+ 
+    providers:	# Fournisseur d'utilisateur 
+        main: 	# nom arbritraire du provider, utilisé dans la configuration du firewall
+            id: fos_user.user_provider.username
+            
+    firewalls:	# Comme les routes: premier arrivé, premier servi
+        #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }
+        # disables authentication for assets and the profiler, adapt it according to your needs
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/		#masque d'URL.
+            security: false	# Ce pare-feu désactive totalement la sécurité,
+            		# les URL /css/… ne sont pas protégées du tout.
+            
+            ####     config pour interdire les anonymes sur le site:     #####
+ #       # On crée un pare-feu uniquement pour le formulaire
+ #       main_login:
+ #           # Cette expression régulière permet de prendre /login (mais pas /login_check !)
+ #           pattern:   ^/login$
+ #           anonymous: true # On autorise alors les anonymes sur ce pare-feu
+        
+        main:
+            pattern:   ^/
+            anonymous: true
+            #provider:  in_memory
+            provider: main
+            form_login:
+                login_path: fos_user_security_login
+                check_path: fos_user_security_check
+            logout:
+                path: fos_user_security_logout
+                target: /platform	#URL vers laquelle sera redirigé le visiteur après sa déconnexion.
+            remember_me:
+                secret: %secret%  # %secret% est un paramètre de parameter
+            
+    access_control:
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        # autres options:
+        #- { path: ^/admin, ip: 127.0.0.1, requires_channel: https }
+        # Ou en appliquant des règles sur les méthodes des contrôleurs.</pre>
+	
+	<h3>USerBundle</h3>
+	<p>Après création, supprimer le controleur, Tests/Controler/, Resources/views/Default, Resources/config/routing.yml, La ligne d'import (oc_user ) dans  app/config/routing.yml.<p>
+	<pre>// src/OC/UserBundle/Controller/SecurityController.php;
+namespace OC\UserBundle\Controller;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+
+class SecurityController extends Controller{
+  public function loginAction(Request $request) {
+    // Si le visiteur est déjà identifié, on le redirige vers l'accueil
+    if ($this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_REMEMBERED')) {
+      return $this->redirectToRoute('oc_platform_accueil');
+    }
+    $authenticationUtils = $this->get('security.authentication_utils');
+    return $this->render('OCUserBundle:Security:login.html.twig', array(
+      'last_username' => $authenticationUtils->getLastUsername(),
+      'error'         => $authenticationUtils->getLastAuthenticationError(),
+    ));
+  }
+}</pre>
+	<p>La vue pourrait être 
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/securite-et-gestion-des-utilisateurs-1#/id/r-3624411">
+			la suivante
+		</a>.
+	</p>
+	<p>Récupérer l'utilisateur courant depuis le contrôleur ou un service:</p>
+	<pre>$security = $container->get('security.token_storage'); // On récupère le service
+$token = $security->getToken(); // On récupère le token
+// Si la requête courante n'est pas derrière un pare-feu, $token est null
+$user = $token->getUser(); // Sinon, on récupère l'utilisateur
+// Si l'utilisateur courant est anonyme, $user vaut « anon. »
+$user->getUsername(); // Sinon, c'est une instance de notre entité User, on peut l'utiliser normalement</pre>
+	<p>Le contrôleur dispose d'un raccourci:</p>
+	<pre>// Depuis un contrôleur
+$user = $this->getUser();
+if (null === $user) {
+  // Ici, l'utilisateur est anonyme ou l'URL n'est pas derrière un pare-feu
+} else {
+  // Ici, $user est une instance de notre classe User
+}</pre>
+	<p>Depuis une vue Twig:</p>
+	<pre>Bonjour {% verbatim %} {{ app.user.username }} - {{ app.user.email }} {% endverbatim %}</pre>
+<!-- ******************************************************************* -->	
+	<h3>Gestion des autorisations avec les rôles</h3>
+	<h4>Tester les rôles de l'utilisateur</h4>
+	<p>Quatre méthodes: les annotations, le service security.authorization_checker, Twig, et les contrôles d'accès.</p>
+	<p>C'est la complémentarité des méthodes qui fait l'efficacité de la sécurité avec Symfony.</p>
+	<p>Depuis un controleur ou un service:</p>
+	<pre>  if (!$this->get('security.authorization_checker')->isGranted('ROLE_AUTEUR')) {
+      throw new AccessDeniedException('Accès limité aux auteurs.');
+    }
+    // Ici l'utilisateur a les droits suffisant, on peut ajouter une annonce</pre>
+    <p>Utiliser les annotations dans un controleur:</p>
+    <pre>...
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+...
+  /**
+   * @Security("has_role('ROLE_AUTEUR') and has_role('ROLE_AUTRE')")
+   */
+  public function addAction(Request $request) {
+    // Plus besoin du if avec le security.context, l'annotation s'occupe de tout !
+    // Dans cette méthode, vous êtes sûrs que l'utilisateur courant dispose du rôle ROLE_AUTEUR
+  }</pre>
+	<p>Le détail des variables et fonctions disponibles est dans la 
+		<a href="https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/security.html">
+			documentation
+		</a>.
+	</p>
+	<p>Pour vérifier simplement que l'utilisateur est authentifié, et donc qu'il n'est pas anonyme, vous pouvez utiliser le rôle spécial IS_AUTHENTICATED_REMEMBERED.</p>
+	<p>Depuis une vue Twig:</p>
+	<pre>{% verbatim %}{% if is_granted('ROLE_AUTEUR') %}
+  <li><a href="{{ path('oc_platform_add') }}">Ajouter une annonce</a></li>
+{% endif %}{% endverbatim %}</pre>
+	<p>Utiliser les contrôles d'accès, cette méthode permet de sécuriser des URL.</p>
+	<pre># app/config/security.yml
+security:
+    access_control:
+        - { path: ^/admin, roles: ROLE_ADMIN } #Sécurise toutes les pages dont l'URL commence par /admin.</pre>
+	<pre>security:
+    access_control:
+        - { path: ^/admin, ip: 127.0.0.1, requires_channel: https } # sécurise les URL par IP ou par canal.</pre>
+<!-- ******************************************************************* -->
+	<h3>Utiliser des utilisateurs de la base de données</h3>
+	<p>
+		<a href="https://openclassrooms.com/courses/developpez-votre-site-web-avec-le-framework-symfony/securite-et-gestion-des-utilisateurs-1#/id/r-3624524">
+			Gérer les utilisateurs soi-même.
+		</a>
+	</p>
+<!-- ******************************************************************* -->	
+	<h3>Utiliser FOSUserBundle</h3>
+	<p>Sa page est 
+		<a href="https://github.com/FriendsOfSymfony/FOSUserBundle">
+			ici.
+		</a>
+	</p>
+	<p>Documentation: Vendor/friendsofsymfony/user-bundle/Resources/doc.</p>
+	<p><a href="https://symfony.com/doc/master/bundles/FOSUserBundle/index.html">Documentation de FOSUserBundle</a>.</p>
+	<pre>// composer.json
+  // …
+  "require": {
+    // …
+    "friendsofsymfony/user-bundle": "dev-master"
+  }</pre>
+  <pre>php composer.phar update friendsofsymfony/user-bundle</pre>
+  <pre>// app/AppKernel.php
+public function registerBundles() {
+  $bundles = array(
+    // …
+    new FOS\UserBundle\FOSUserBundle(),
+  );</pre>
+  <p>Hériter FOSUserBundle depuis notre OCUserBundle:</p>
+  <pre>// src/OC/UserBundle/OCUserBundle.php
+namespace OC\UserBundle;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class OCUserBundle extends Bundle{
+  public function getParent()  {
+    return 'FOSUserBundle';
+  }
+}</pre>
+	<pre>// src/OC/UserBundle/Entity/User.php
+namespace OC\UserBundle\Entity;
+use Doctrine\ORM\Mapping as ORM;
+use FOS\UserBundle\Model\User as BaseUser;
+
+/**
+ * @ORM\Table(name="oc_user")
+ * @ORM\Entity(repositoryClass="OC\UserBundle\Repository\UserRepository")
+ */
+class User extends BaseUser{
+  /**
+   * @ORM\Column(name="id", type="integer")
+   * @ORM\Id
+   * @ORM\GeneratedValue(strategy="AUTO")
+   */
+  protected $id;
+}</pre>
+	<p> le bundle FOSUserBundle ne définit pas vraiment l'entité User, il définit une mapped, c'est une entité abstraite, il faut en hériter pour en faire une vraie entité.</p>
+	<p>On peut retrouver les attributs dans 
+		<a href="https://github.com/FriendsOfSymfony/FOSUserBundle/blob/master/Resources/config/doctrine-mapping/User.orm.xml">
+			la définition Doctrine
+		</a>.
+	</p>
+	<pre># app/config/config.yml
+fos_user:
+    db_driver:     orm                       # Le type de BDD à utiliser, nous utilisons l'ORM Doctrine depuis le début
+    firewall_name: main                      # Le nom du firewall derrière lequel on utilisera ces utilisateurs
+    user_class:    OC\UserBundle\Entity\User # La classe de l'entité User que nous utilisons</pre>
+	<p>Voir security.yml plus haut.</p>
+	<pre>php bin/console fos:user:create</pre>
+	<pre># app/config/routing.yml
+# …
+fos_user_security:
+    resource: "@FOSUserBundle/Resources/config/routing/security.xml"
+fos_user_profile:
+    resource: "@FOSUserBundle/Resources/config/routing/profile.xml"
+    prefix: /profile
+fos_user_register:
+    resource: "@FOSUserBundle/Resources/config/routing/registration.xml"
+    prefix: /register
+fos_user_resetting:
+    resource: "@FOSUserBundle/Resources/config/routing/resetting.xml"
+    prefix: /resetting
+fos_user_change_password:
+    resource: "@FOSUserBundle/Resources/config/routing/change_password.xml"
+    prefix: /profile</pre>
+    <p>Intégrer les pages du bundle dans notre layout:</p>
+    <pre>{% verbatim %}{# app/Resources/FOSUserBundle/views/layout.html.twig #}
+{% extends "OCCoreBundle::layout.html.twig" %}
+{% block body %}
+  {% for key, messages in app.session.flashbag.all() %}
+    {% for message in messages %}
+      <div class="alert alert-{{ key }}">
+        {{ message|trans({}, 'FOSUserBundle') }}
+      </div>
+    {% endfor %}
+  {% endfor %}
+  {% block fos_user_content %}
+  {% endblock fos_user_content %}
+{% endblock %}{% endverbatim %}</pre>
+	<p>Traduction:</p>
+	<pre># app/config/config.yml
+framework:
+    translator:      { fallbacks: ["%locale%"] }</pre>
+	<p>Afficher une barre utilisateur</p>
+	<pre>{% filter escape %}{% verbatim %}{% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
+    Connecté en tant que {{ app.user.username }} - 
+    <a href="{{ path('fos_user_security_logout') }}">Déconnexion</a>
+{% else %}
+    <a href="{{ path('fos_user_security_login') }}">Connexion</a>
+{% endif %}{% endverbatim %}{% endfilter %}</pre>
+	<p>Le rôle IS_AUTHENTICATED_FULLY est donné à un utilisateur qui s'est obligatoirement authentifié manuellement, en rentrant son mot de passe dans le formulaire de connexion. C'est utile pour protéger les opérations sensibles comme le changement de mot de passe ou d'adresse e-mail.</p>
+	<p>Manipuler les utilisateurs avec FOSUserBundle. Dans un contrôleur:</p>
+	<pre>$userManager = $this->get('fos_user.user_manager');
+	
+$user = $userManager->findUserBy(array('username' => 'winzou'));
+
+$user->setEmail('cetemail@nexiste.pas');
+$userManager->updateUser($user); // Pas besoin de faire un flush avec l'EntityManager, cette méthode le fait toute seule !
+
+$userManager->deleteUser($user);
+
+$users = $userManager->findUsers();</pre>
+
+{% filter escape %}{% verbatim %}{% endverbatim %}{% endfilter %}
+	
+	<h4>En résumé</h4>
+	<p>aller plus loin pour faire des opérations plus précises (authentification Facebook, LDAP, etc.), n'hésitez pas à vous référer à la 
+		<a href="https://symfony.com/doc/current/book/security.html">
+			documentation officielle sur la sécurité.
+		</a>
+	</p>
+	<p><a href="https://symfony.com/doc/master/bundles/FOSUserBundle/groups.html">Utilisation des groupes</a>.</p>
+	<p><a href="https://symfony.com/doc/current/cookbook/security/acl.html">système d'ACL</a>.</p>
+	<ul>
+		<li>La sécurité se compose de deux couches :
+			<ul>
+				<li>L'authentification, qui définit qui est le visiteur ;</li>
+				<li>L'autorisation, qui définit si le visiteur a accès à la ressource demandée.</li>
+			</ul>
+		</li>
+		<li>Le fichier security.yml permet de configurer finement chaque acteur de la sécurité :
+			<ul>
+				<li>La configuration de l'authentification passe surtout par le paramétrage d'un ou plusieurs pare-feu ;</li>
+				<li>La configuration de l'autorisation se fait au cas par cas suivant les ressources : on peut sécuriser une méthode de contrôleur, un affichage ou une URL.</li>
+			</ul>
+		</li>
+		<li>Les rôles associés aux utilisateurs définissent les droits dont ils disposent ;</li>
+		<li>On peut configurer la sécurité pour utiliser FOSUserBundle, un bundle qui offre un espace membres presque clé en main.</li>
+	</ul>
+
+		
+{% endblock %}	

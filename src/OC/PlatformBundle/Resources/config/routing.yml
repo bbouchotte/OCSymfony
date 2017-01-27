@@ -48,7 +48,15 @@ oc_platform_delete_application:
         idAdvert: \d+
         idApplication: \d+
         
-        
+oc_platform_apply:
+    path:     /apply/{id}
+    defaults:
+        _controler: OCPlatformBundle:Advert:Apply
+    requirements:
+        id: \d+
+
+
+
 oc_platform_gawc:
     path:     /gawc
     defaults:

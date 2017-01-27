@@ -1,20 +1,50 @@
 # To get started with security, check out the documentation:
 # http://symfony.com/doc/current/book/security.html
 security:
-
+    encoders:
+        OC\UserBundle\Entity\User: sha512 #plaintext
+        
+    role_hierarchy:
+        ROLE_USER: ~
+        ROLE_AUTHOR: ~
+        ROLE_ADMIN:       [ROLE_USER, ROLE_AUTHOR ]
+        ROLE_SUPER_ADMIN: [ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]
+        
     # http://symfony.com/doc/current/book/security.html#where-do-users-come-from-user-providers
+ 
     providers:
-        in_memory:
-            memory: ~
-
+        main:     # nom arbritraire du provider, ustilisé dans la configuration du firewall
+            id: fos_user.user_provider.username
+            
     firewalls:
+        #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }
         # disables authentication for assets and the profiler, adapt it according to your needs
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-
+            
+            
+            ####     config pour interdire les anonymes sur le site:     #####
+ #       # On crée un pare-feu uniquement pour le formulaire
+ #       main_login:
+ #           # Cette expression régulière permet de prendre /login (mais pas /login_check !)
+ #           pattern:   ^/login$
+ #           anonymous: true # On autorise alors les anonymes sur ce pare-feu
+        
         main:
-            anonymous: ~
+            pattern:   ^/
+            anonymous: true
+            #provider:  in_memory
+            provider: main
+            form_login:
+                login_path: fos_user_security_login #login
+                check_path: fos_user_security_check #login_check
+            logout:
+                path: fos_user_security_logout      #logout
+                target: /platform
+            remember_me:
+                secret: %secret%  # %secret% est un paramètre de parameter
+                
             # activate different ways to authenticate
 
             # http_basic: ~
@@ -22,3 +52,12 @@ security:
 
             # form_login: ~
             # http://symfony.com/doc/current/cookbook/security/form_login_setup.html
+            
+    access_control:
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        # autres options:
+        #- { path: ^/admin, ip: 127.0.0.1, requires_channel: https }
+        
+        
+        
+        

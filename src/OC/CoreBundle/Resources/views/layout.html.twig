@@ -25,6 +25,12 @@
           Participer au MOOC »
         </a>
         <a class="btn btn-primary btn-sm" href="{{ path('memo_symfony') }}">Mon mémo</a>
+        {% if app.user is null %}
+        	<a class="btn btn-primary btn-sm" href="/login">login</a>
+        	<a class="btn btn-primary btn-sm" href="/register">register</a>
+        {% else %}
+        	{{ app.user.username }}: <a class="btn btn-primary btn-sm" href="/logout">logout</a>
+        {% endif %}
       </p>
     </div>
 

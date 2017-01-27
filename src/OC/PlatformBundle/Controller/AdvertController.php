@@ -21,6 +21,9 @@ use OC\PlatformBundle\Form\AdvertType;
 use OC\PlatformBundle\Form\AdvertEditType;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+
 class AdvertController extends Controller
 
 {	
@@ -97,8 +100,19 @@ class AdvertController extends Controller
     	));
     }
 
+    /**
+     * @Security("has_role('ROLE_AUTHOR')")
+     */
     public function addAction(Request $request)
     {
+    	/*
+			// 	 alternative aux annotations
+
+    	if (!$this->get('security.authorization_checker')->isGranted('ROLE_AUTEUR')) {
+    		throw new AccessDeniedException("Accés limité aux auteurs");
+    	}
+    	*/
+    	
     	$advert = new Advert();
     	$advert->setAuthor('Benjamin'); // Va afficher cette valeur par défaut dans le formulaire
     	$advert->setIp($request->getClientIp());
@@ -194,7 +208,17 @@ class AdvertController extends Controller
     	return $this->redirectToRoute('oc_platform_view', array('id' => $idAdvert));
     }
     
-       
+    /**
+     * @Security("has_role('IS_AUTHENTICATED_REMEMBERED')") 
+     */
+     public function applyAction($id){
+    	
+    }
+    
+    
+    
+    
+    
     public function hello_worldAction() {
     
     	// return new Response("Notre propre Hello World !");
